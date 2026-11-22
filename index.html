@@ -1,0 +1,1663 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f172a">
+<title>중부·강원권 골프장 304개소 모바일 디렉토리 (읽기 전용)</title>
+<style>
+  :root {
+    --bg: #0b1120;
+    --header-bg: rgba(15, 23, 42, 0.96);
+    --card: #162033;
+    --card-active: #1e293b;
+    --border: #283548;
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --accent-2: #22c55e;
+    --warn: #f59e0b;
+    --danger: #f43f5e;
+    --purple: #a78bfa;
+  }
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  html, body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+    line-height: 1.45;
+  }
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: calc(28px + env(safe-area-inset-bottom));
+  }
+  button, select, input, textarea, a {
+    font-family: inherit;
+    touch-action: manipulation;
+  }
+
+  /* 앱 전체 컨테이너 (모바일 중심, 태블릿/PC에서도 중앙 정렬된 모바일 뷰 제공) */
+  .app-shell {
+    width: 100%;
+    max-width: 680px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+  }
+
+  /* 1. 상단 고정 영역: 타이틀 + 검색창 + 권역별 클릭창 */
+  .sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: var(--header-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 14px 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .top-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .top-title-row h1 {
+    font-size: 16.5px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .total-pill {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(56, 189, 248, 0.16);
+    color: #7dd3fc;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+  }
+  .top-mini-actions {
+    display: flex;
+    gap: 5px;
+  }
+  .mini-btn {
+    border: 1px solid var(--border);
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 5px 9px;
+    border-radius: 8px;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .mini-btn.accent {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #062133;
+  }
+  .mini-btn.green {
+    background: var(--accent-2);
+    border-color: var(--accent-2);
+    color: #052e16;
+  }
+
+
+  /* 데이터 소스 상태 배너 (실시간 / 로컬 폴백 표시) */
+  .data-status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    border: 1px solid var(--border);
+    background: #111c30;
+    color: #cbd5e1;
+    transition: all 0.2s ease;
+  }
+  .data-status-bar.loading {
+    border-color: rgba(56, 189, 248, 0.45);
+    background: rgba(56, 189, 248, 0.12);
+    color: #7dd3fc;
+  }
+  .data-status-bar.live {
+    border-color: rgba(34, 197, 94, 0.5);
+    background: rgba(34, 197, 94, 0.14);
+    color: #86efac;
+  }
+  .data-status-bar.local {
+    border-color: rgba(245, 158, 11, 0.5);
+    background: rgba(245, 158, 11, 0.14);
+    color: #fcd34d;
+  }
+  .status-left {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+  }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: #94a3b8;
+  }
+  .data-status-bar.loading .status-dot {
+    background: #38bdf8;
+    box-shadow: 0 0 8px #38bdf8;
+  }
+  .data-status-bar.live .status-dot {
+    background: #22c55e;
+    box-shadow: 0 0 8px #22c55e;
+  }
+  .data-status-bar.local .status-dot {
+    background: #f59e0b;
+    box-shadow: 0 0 8px #f59e0b;
+  }
+  .status-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .status-sub {
+    font-size: 10.5px;
+    font-weight: 600;
+    opacity: 0.85;
+    margin-left: 4px;
+  }
+  .sync-btn {
+    flex-shrink: 0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(15, 23, 42, 0.65);
+    color: #f8fafc;
+    border-radius: 7px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .sync-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  /* 검색창 (iOS 자동 줌 방지 16px 폰트 적용) */
+  .search-wrap {
+    position: relative;
+    width: 100%;
+  }
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 15px;
+    pointer-events: none;
+  }
+  .search-input {
+    width: 100%;
+    background: #090e1a;
+    border: 1.5px solid #334155;
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 10px 38px 10px 36px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .search-input::placeholder {
+    color: #64748b;
+    font-size: 14px;
+  }
+  .search-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+  }
+  .search-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: none;
+    background: #334155;
+    color: #f8fafc;
+    font-size: 13px;
+    font-weight: 700;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .search-clear.show {
+    display: flex;
+  }
+
+  /* 2. 권역별 클릭창 (큰 터치 버튼 그리드/가로 스크롤) */
+  .region-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .region-btn {
+    border: 1px solid var(--border);
+    background: #162033;
+    color: #cbd5e1;
+    border-radius: 10px;
+    padding: 8px 6px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.14s ease;
+  }
+  .region-btn .cnt {
+    font-size: 11px;
+    font-weight: 600;
+    opacity: 0.85;
+  }
+  .region-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #061826;
+    box-shadow: 0 4px 12px rgba(56, 189, 248, 0.28);
+  }
+
+  /* 세부 필터 & 정렬 바 */
+  .sub-filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .sub-filter-bar::-webkit-scrollbar { display: none; }
+  .sub-select {
+    flex: 1;
+    min-width: 115px;
+    background: #0f172a;
+    border: 1px solid var(--border);
+    color: #e2e8f0;
+    border-radius: 9px;
+    padding: 7px 8px;
+    font-size: 13px;
+    font-weight: 600;
+    outline: none;
+  }
+  .sort-btn {
+    flex-shrink: 0;
+    background: #0f172a;
+    border: 1px solid var(--border);
+    color: #cbd5e1;
+    border-radius: 9px;
+    padding: 7px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .sort-btn.active {
+    border-color: var(--accent-2);
+    color: #86efac;
+    background: rgba(34, 197, 94, 0.14);
+  }
+
+  /* 결과 요약 & 관리 도구 바 */
+  .result-status-bar {
+    padding: 9px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    background: #0d1526;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+  }
+  .result-status-bar strong {
+    color: #38bdf8;
+    font-weight: 800;
+  }
+
+  /* 3. 골프장 304개소 상세 카드 리스트 */
+  .course-list {
+    padding: 10px 12px 24px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+  }
+  .course-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 13px 14px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.24);
+    transition: border-color 0.15s ease, transform 0.12s ease;
+    cursor: pointer;
+  }
+  .course-card:active {
+    transform: scale(0.992);
+  }
+  .course-card.highlighted {
+    border-color: var(--accent-2);
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.35);
+    background: #19273c;
+  }
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 7px;
+  }
+  .card-title {
+    font-size: 15.5px;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.35;
+    word-break: keep-all;
+  }
+  .card-num {
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+    margin-right: 4px;
+  }
+  .card-caterer {
+    color: var(--accent);
+    font-weight: 800;
+  }
+  .card-detail-btn {
+    flex-shrink: 0;
+    background: rgba(56, 189, 248, 0.14);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    color: #7dd3fc;
+    border-radius: 8px;
+    padding: 5px 9px;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* 배지 태그 */
+  .badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 9px;
+  }
+  .tag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 7px;
+    border-radius: 6px;
+    background: rgba(148, 163, 184, 0.14);
+    color: #e2e8f0;
+  }
+  .tag.region {
+    background: rgba(56, 189, 248, 0.18);
+    color: #7dd3fc;
+  }
+  .tag.change {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fcd34d;
+  }
+  .tag.beer {
+    background: rgba(167, 139, 250, 0.2);
+    color: #ddd6fe;
+  }
+  .tag.edited {
+    background: rgba(34, 197, 94, 0.22);
+    color: #86efac;
+  }
+
+  /* 상세 정보 그리드 */
+  .info-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12.5px;
+    color: #cbd5e1;
+  }
+  .info-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    line-height: 1.45;
+  }
+  .info-label {
+    flex-shrink: 0;
+    width: 54px;
+    color: var(--muted);
+    font-weight: 700;
+    font-size: 12px;
+  }
+  .info-val {
+    flex: 1;
+    min-width: 0;
+    word-break: keep-all;
+  }
+  .tel-link {
+    color: #86efac;
+    text-decoration: none;
+    font-weight: 700;
+  }
+
+  /* 6곳의 인근 골프장 영역 */
+  .nearby-box {
+    margin-top: 10px;
+    padding-top: 9px;
+    border-top: 1px dashed rgba(148, 163, 184, 0.26);
+  }
+  .nearby-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #93c5fd;
+    margin-bottom: 6px;
+  }
+  .nearby-head span.sub {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .nearby-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 5px;
+  }
+  .nearby-item {
+    background: #0d1526;
+    border: 1px solid #263349;
+    border-radius: 8px;
+    padding: 6px 8px;
+    text-align: left;
+    color: #f1f5f9;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    transition: border-color 0.14s ease, background 0.14s ease;
+  }
+  .nearby-item:active {
+    background: rgba(56, 189, 248, 0.18);
+    border-color: var(--accent);
+  }
+  .nearby-name-line {
+    font-size: 11.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .nearby-name-line .cat {
+    color: #7dd3fc;
+    font-weight: 600;
+  }
+  .nearby-meta-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    font-size: 10.5px;
+  }
+  .nearby-city {
+    color: #94a3b8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .time-pill {
+    flex-shrink: 0;
+    font-weight: 800;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 10px;
+  }
+  .t-fast { background: rgba(34, 197, 94, 0.22); color: #86efac; }
+  .t-mid { background: rgba(56, 189, 248, 0.22); color: #7dd3fc; }
+  .t-far { background: rgba(245, 158, 11, 0.22); color: #fcd34d; }
+
+  /* 맨 위로 플로팅 버튼 */
+  .scroll-top-btn {
+    position: fixed;
+    right: 16px;
+    bottom: calc(18px + env(safe-area-inset-bottom));
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.92);
+    border: 1.5px solid var(--accent);
+    color: var(--accent);
+    font-size: 18px;
+    font-weight: 800;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 35;
+  }
+  .scroll-top-btn.show {
+    display: flex;
+  }
+
+  /* 전체화면 상세 바텀시트/드로어 */
+  .sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.72);
+    backdrop-filter: blur(3px);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.22s ease, visibility 0.22s ease;
+    z-index: 70;
+  }
+  .sheet-backdrop.open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+  .detail-sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-width: 680px;
+    margin: 0 auto;
+    height: 92dvh;
+    background: #111827;
+    border-top: 1px solid #334155;
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -16px 48px rgba(0, 0, 0, 0.75);
+    transform: translateY(102%);
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.28s ease;
+    z-index: 80;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .detail-sheet.open {
+    transform: translateY(0);
+    visibility: visible;
+    pointer-events: auto;
+  }
+  .sheet-handle {
+    width: 40px;
+    height: 4px;
+    border-radius: 999px;
+    background: #475569;
+    margin: 9px auto 4px auto;
+    flex-shrink: 0;
+  }
+  .sheet-header {
+    padding: 8px 16px 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .sheet-header h2 {
+    font-size: 16px;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.3;
+  }
+  .sheet-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 14px 16px 28px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .map-box {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #090e1a;
+  }
+  .map-box iframe {
+    width: 100%;
+    height: 190px;
+    border: 0;
+    display: block;
+  }
+  .map-ext-bar {
+    padding: 9px 12px;
+    background: #162033;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .ext-links {
+    display: flex;
+    gap: 6px;
+  }
+  .ext-links a {
+    color: #7dd3fc;
+    text-decoration: none;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 7px;
+    background: rgba(56, 189, 248, 0.14);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+  }
+  .sheet-section {
+    background: #162033;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+  }
+  .sheet-section h3 {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .kv-list {
+    display: grid;
+    grid-template-columns: 78px 1fr;
+    gap: 6px 8px;
+    font-size: 13px;
+  }
+  .kv-list .k {
+    color: var(--muted);
+    font-weight: 700;
+  }
+  .kv-list .v {
+    color: #f8fafc;
+    word-break: keep-all;
+  }
+  .km-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 11px;
+    border-radius: 9px;
+    background: #0d1526;
+    border: 1px solid #283548;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+  .km-card:last-child { margin-bottom: 0; }
+  .sheet-nearby-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 9px 11px;
+    border-radius: 9px;
+    background: #0d1526;
+    border: 1px solid #283548;
+    margin-bottom: 6px;
+    cursor: pointer;
+  }
+  .sheet-nearby-row:last-child { margin-bottom: 0; }
+
+  .toast {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    bottom: calc(20px + env(safe-area-inset-bottom));
+    max-width: 480px;
+    margin: 0 auto;
+    background: #065f46;
+    color: #ecfdf5;
+    border: 1px solid #10b981;
+    padding: 11px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    z-index: 200;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.2s ease;
+    pointer-events: none;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <!-- 상단 고정: 타이틀 + 검색창 + 권역별 클릭창 + 세부 정렬 -->
+  <header class="sticky-top">
+    <div class="top-title-row">
+      <h1>⛳ 중부·강원 골프장 <span class="total-pill" id="totalBadge">304개소</span> <span class="total-pill" style="background:rgba(148,163,184,0.16);color:#cbd5e1;border-color:rgba(148,163,184,0.35);">읽기 전용</span></h1>
+    </div>
+
+    <!-- 데이터 연결 상태 표시줄 (실시간 구글시트 vs 로컬 내장 데이터) -->
+    <div class="data-status-bar loading" id="dataStatusBar" role="status" aria-live="polite">
+      <div class="status-left">
+        <span class="status-dot"></span>
+        <span class="status-text" id="dataStatusText">구글시트 실시간 데이터 연결 중...</span>
+      </div>
+      <button type="button" class="sync-btn" id="syncLiveBtn">새로고침 ↻</button>
+    </div>
+
+    <!-- 1. 검색창 -->
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input
+        type="search"
+        id="searchInput"
+        class="search-input"
+        placeholder="골프장명, 위탁사, 시·군, 도매장, 키맨 검색..."
+        autocomplete="off"
+      />
+      <button type="button" id="searchClearBtn" class="search-clear" aria-label="검색어 지우기">✕</button>
+    </div>
+
+    <!-- 2. 권역별 클릭창 (6개 버튼 그리드) -->
+    <div class="region-grid" id="regionGrid" role="tablist" aria-label="권역 선택">
+      <button type="button" class="region-btn active" data-region="ALL">전체 <span class="cnt">(304)</span></button>
+      <button type="button" class="region-btn" data-region="경기권">경기권 <span class="cnt">(157)</span></button>
+      <button type="button" class="region-btn" data-region="강원권">강원권 <span class="cnt">(70)</span></button>
+      <button type="button" class="region-btn" data-region="충청권">충청권 <span class="cnt">(63)</span></button>
+      <button type="button" class="region-btn" data-region="인천권">인천권 <span class="cnt">(13)</span></button>
+      <button type="button" class="region-btn" data-region="서울">서울 <span class="cnt">(1)</span></button>
+    </div>
+
+    <!-- 세부 시·군 / 위탁사 / 정렬 선택 -->
+    <div class="sub-filter-bar">
+      <select id="cityFilter" class="sub-select" aria-label="시·군 선택">
+        <option value="ALL">시·군 전체</option>
+      </select>
+      <select id="catererFilter" class="sub-select" aria-label="위탁사 선택">
+        <option value="ALL">위탁사 전체</option>
+      </select>
+      <button type="button" class="sort-btn active" data-sort="region">지역순</button>
+      <button type="button" class="sort-btn" data-sort="name">가나다순</button>
+      <button type="button" class="sort-btn" data-sort="num">번호순</button>
+    </div>
+  </header>
+
+  <!-- 검색 결과 건수 표시 바 -->
+  <div class="result-status-bar">
+    <span id="resultSummary">검색 결과 <strong>304개소</strong> (인근 6곳 포함)</span>
+    <button type="button" id="resetFilterBtn" style="background:none; border:none; color:#94a3b8; font-size:11.5px; font-weight:700; cursor:pointer;">필터 초기화 ↺</button>
+  </div>
+
+  <!-- 3. 304개소 상세 정보 카드 목록 -->
+  <main class="course-list" id="courseList"></main>
+</div>
+
+<!-- 맨 위로 이동 버튼 -->
+<button type="button" id="scrollTopBtn" class="scroll-top-btn" aria-label="맨 위로">↑</button>
+
+<!-- 상세 정보 바텀시트 (지도, 전경, 키맨, 인근 6곳 상세) -->
+<div class="sheet-backdrop" id="sheetBackdrop"></div>
+<section class="detail-sheet" id="detailSheet" aria-hidden="true">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <h2 id="sheetTitle">골프장 상세 정보</h2>
+    <div style="display:flex; gap:6px; flex-shrink:0;">
+      <button type="button" class="mini-btn" id="sheetCloseBtn">닫기 ✕</button>
+    </div>
+  </div>
+  <div class="sheet-body" id="sheetBody"></div>
+</section>
+<div class="toast" id="toast"></div>
+
+<script id="golfDataScript">
+const DEFAULT_GOLF_DATA = [{"num":1,"region":"강원권","change":"기존","name":"메이플비치골프","addr":"강원 강릉시 강동면 염전길 255","tel":"033-650-0000","mem":null,"pub":18,"caterer":"직영","keyman":"박민철","role":"식음팀장","mobile":"010-3032-6721","wh":"춘천세계","draft":"하이네켄","can":null,"note":null},{"num":2,"region":"강원권","change":"기존","name":"강릉공군체력단련장","addr":"강원 강릉시 공항길 180","tel":"000-000-0000","mem":null,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":3,"region":"강원권","change":"오픈예정","name":"강릉 구정/옥계 해안권 신규CC (오픈예정)","addr":"강원 강릉시 옥계면 일원","tel":"-","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"오픈예정 (강원 영동 강릉권 신규 리조트형 골프장)"},{"num":4,"region":"강원권","change":"기존","name":"샌드파인골프클럽","addr":"강원 강릉시 저동등길 53","tel":"1644-3001","mem":18,"pub":null,"caterer":"직영","keyman":"신원률","role":"지배인","mobile":"010-9243-6521","wh":"춘천세계","draft":"삿포로","can":null,"note":null},{"num":5,"region":"강원권","change":"기존","name":"설악썬밸리골프클럽","addr":"강원 고성군 죽왕면 순포로 188","tel":"033-638-5362","mem":null,"pub":27,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":6,"region":"강원권","change":"상호변경","name":"소노펠리체 델피노CC","addr":"강원 고성군 토성면 미시령옛길 1153","tel":"033-639-8401","mem":null,"pub":18,"caterer":"직영","keyman":"최춘식","role":"지배인","mobile":"010-8878-7632","wh":"춘천세계","draft":"스텔라","can":null,"note":"브랜드통합/상호변경 (구 델피노CC / 소노인터내셔널)"},{"num":7,"region":"강원권","change":"신규오픈","name":"더헤븐/고성 파인리즈 인접 신규 퍼블릭 (고성권)","addr":"강원 고성군 토성면 일원","tel":"-","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"신규오픈 (강원 영동·고성권 신설 대중제)"},{"num":8,"region":"강원권","change":"기존","name":"파인리즈리조트","addr":"강원 고성군 토성면 잼버리동로 267","tel":"1577-6399","mem":null,"pub":27,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":9,"region":"강원권","change":"기존","name":"낙산대체력단련장","addr":"강원 동해시 용정동 500","tel":"033-539-6764","mem":null,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":10,"region":"강원권","change":"기존","name":"파인밸리컨트리클럽","addr":"강원 삼척시 근덕면 미근로 1629","tel":"033-573-0874","mem":18,"pub":null,"caterer":"웰스토리","keyman":"송원순","role":null,"mobile":"010-6761-1124","wh":"삼척주류","draft":"레드락","can":null,"note":null},{"num":11,"region":"강원권","change":"기존","name":"블랙밸리컨트리클럽","addr":"강원 삼척시 도계읍 도상로 307-84","tel":"033-540-5301","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":12,"region":"강원권","change":"기존","name":"플라자설악컨트리클럽","addr":"강원 속초시 미시령로2983번길 111","tel":"033-630-5511","mem":18,"pub":null,"caterer":"한화 호텔&리조트","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":13,"region":"강원권","change":"기존","name":"영랑호컨트리클럽","addr":"강원 속초시 영랑호반길 183","tel":"033-633-0003","mem":null,"pub":9,"caterer":null,"keyman":"박정훈","role":"매니저","mobile":"010-7231-0009","wh":null,"draft":null,"can":null,"note":null},{"num":14,"region":"강원권","change":"기존","name":"설해원 골프","addr":"강원 양양군 손양면 공항로 230","tel":"033-670-7700","mem":27,"pub":null,"caterer":"직영","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":15,"region":"강원권","change":"신규오픈","name":"설해원 더 레전드코스 (신규증설)","addr":"강원 양양군 손양면 공항로 230","tel":"033-670-7700","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"신규코스 오픈 (기존 설해원 내 신규 18홀 증설 오픈)"},{"num":16,"region":"강원권","change":"오픈예정","name":"양양 현남/지경리 신규CC (오픈예정)","addr":"강원 양양군 현남면 지경리 일원","tel":"-","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"오픈예정 (양양 남부 해안 관광단지 연계 골프장)"},{"num":17,"region":"강원권","change":"상호변경","name":"동강시스타CC","addr":"강원 영월군 영월읍 사지막길 152","tel":"033-905-2030","mem":null,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"명칭정비 (구 탑스텐리조트 동강시스타CC / 영월)"},{"num":18,"region":"강원권","change":"기존","name":"인터불고 원주퍼블릭골프클럽","addr":"강원 원주시 동부순환로 200","tel":"033-769-8280","mem":null,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":19,"region":"강원권","change":"기존","name":"센추리21컨트리클럽","addr":"강원 원주시 문막읍 궁촌리 산 47-5","tel":"033-733-1000","mem":36,"pub":9,"caterer":"직영","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":20,"region":"강원권","change":"신규오픈","name":"원주 부론/문막 신규 퍼블릭 (남한강권)","addr":"강원 원주시 문막읍 반계리 일원","tel":"-","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"신규오픈 (원주 서부권 신설 대중제)"},{"num":21,"region":"강원권","change":"신규추가(위탁)","name":"남한강에스파크CC","addr":"강원 원주시 부론면 일원","tel":"-","mem":null,"pub":18,"caterer":"아워홈","keyman":null,"role":null,"mobile":null,"wh":"중앙종합/수원세계","draft":null,"can":null,"note":"신규편입 및 위탁·도매 반영 (아워홈 / 중앙종합·수원세계)"},{"num":22,"region":"강원권","change":"기존","name":"원주체력단련장","addr":"강원 원주시 소초면 둔둔리 969-2","tel":"033-730-5810","mem":null,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":23,"region":"강원권","change":"기존","name":"파크밸리골프클럽","addr":"강원 원주시 소초면 바우실길 281","tel":"033-744-4000","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":24,"region":"강원권","change":"신규오픈","name":"오로라 골프&리조트","addr":"강원 원주시 신림면 황둔로 350","tel":"033-730-3000","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"신규오픈 (2023.07 개장 / 대중제 18홀)"},{"num":25,"region":"강원권","change":"기존","name":"레스피아 골프&리조트","addr":"강원 원주시 지정면 신평석화로 236","tel":"033-741-7411","mem":null,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"원주 지정면 퍼블릭 (운영/리뉴얼 현황 확인 필요)"},{"num":26,"region":"강원권","change":"기존","name":"오크크릭 퍼블릭","addr":"강원 원주시 지정면 오크밸리2길 250","tel":"1588-7676","mem":null,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":27,"region":"강원권","change":"위탁·도매갱신","name":"오크힐스컨트리클럽","addr":"강원 원주시 지정면 오크밸리2길 56","tel":"033-769-7700","mem":null,"pub":9,"caterer":"웰스토리","keyman":"박성호","role":null,"mobile":"010-2703-5866","wh":"분당포도","draft":null,"can":null,"note":"위탁·도매 반영 (웰스토리 / 분당포도)"},{"num":28,"region":"강원권","change":"신규오픈","name":"월송리CC (오크밸리 신규 대중제)","addr":"강원 원주시 지정면 월송리 산 58 일원","tel":"033-730-3500","mem":null,"pub":18,"caterer":"HDC리조트(직영)","keyman":null,"role":null,"mobile":null,"wh":"춘천세계","draft":null,"can":null,"note":"신규오픈 (오크밸리·성문안 인접 신규 대중제 코스)"},{"num":29,"region":"강원권","change":"신규오픈","name":"성문안CC","addr":"강원 원주시 지정면 월송석화로 531","tel":"033-769-7000","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"신규오픈 (2022.09 개장 / HDC리조트 프리미엄 퍼블릭)"},{"num":30,"region":"강원권","change":"기존","name":"오크밸리컨트리클럽","addr":"강원 원주시 지정면 월송석화로 950","tel":"033-730-3500","mem":54,"pub":9,"caterer":"현대산업계발","keyman":"박정훈","role":"지배인","mobile":null,"wh":"춘천세계","draft":"에딩거","can":null,"note":null},{"num":31,"region":"강원권","change":"기존","name":"하이원 컨트리클럽","addr":"강원 정선군 고한읍 고한7길 399","tel":"1588-7789","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":32,"region":"강원권","change":"기존","name":"에콜리안정선 컨트리클럽","addr":"강원 정선군 신동읍 새골길 112-49","tel":"033-378-7514","mem":null,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":33,"region":"강원권","change":"기존","name":"한탄강컨트리클럽","addr":"강원 철원군 갈말읍 순담길 59","tel":"033-452-5700","mem":18,"pub":null,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":34,"region":"강원권","change":"기존","name":"파가니카컨트리클럽","addr":"강원 춘천시 남면 후동리 618","tel":"033-261-6556","mem":null,"pub":18,"caterer":"신라레저","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":35,"region":"강원권","change":"기존","name":"제이드팰리스골프클럽","addr":"강원 춘천시 남산면 경춘로 212-30","tel":"033-260-8000","mem":18,"pub":null,"caterer":"한화 호텔&리조트","keyman":"이상철","role":"지배인","mobile":"010-2808-7704","wh":"에이스주산, 동부주류","draft":null,"can":null,"note":null},{"num":36,"region":"강원권","change":"오픈예정","name":"춘천 광판리 골프장 (가칭 라비에벨 확장/신규)","addr":"강원 춘천시 남산면 광판리 일원","tel":"-","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"오픈예정 (강원 춘천권 신규 조성 사업)"},{"num":37,"region":"강원권","change":"기존","name":"오너스골프클럽","addr":"강원 춘천시 남산면 동촌로 667","tel":"033-260-1900","mem":null,"pub":18,"caterer":"직영","keyman":"김택주","role":"지배인","mobile":"010-5406-7036","wh":null,"draft":"스텔라","can":null,"note":null},{"num":38,"region":"강원권","change":"기존","name":"엘리시안강촌","addr":"강원 춘천시 남산면 북한강변길 688","tel":"033-260-2000","mem":27,"pub":9,"caterer":"GS","keyman":"임욱","role":"지배인","mobile":"010-3634-9500","wh":null,"draft":null,"can":null,"note":null},{"num":39,"region":"강원권","change":"기존","name":"휘슬링락컨트리클럽","addr":"강원 춘천시 남산면 수동리 754","tel":"070-8121-0100","mem":27,"pub":null,"caterer":"직영","keyman":"변영민","role":"지배인","mobile":"010-8790-6169","wh":"춘천세계","draft":"에딩거","can":null,"note":null},{"num":40,"region":"강원권","change":"오픈예정","name":"춘천 더존/수동리 신규CC (오픈예정)","addr":"강원 춘천시 남산면 수동리 일원","tel":"-","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"오픈예정 (춘천 남산면 일대 신규 골프장 조성 사업)"},{"num":41,"region":"강원권","change":"상호변경","name":"스프링베일GC","addr":"강원 춘천시 동면 금베이길 93-27","tel":"033-254-7900","mem":null,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"상호변경 (구 BNBK스프링베일G.C / 춘천 동면)"},{"num":42,"region":"강원권","change":"기존","name":"로드힐스골프&리조트","addr":"강원 춘천시 동산면 군자리 산 233-1","tel":"033-269-8888","mem":null,"pub":27,"caterer":"직영","keyman":null,"role":null,"mobile":null,"wh":"춘천세계","draft":"칭따오","can":null,"note":null},{"num":43,"region":"강원권","change":"상호변경","name":"더플레이어스GC","addr":"강원 춘천시 동산면 새술막길 438","tel":"033-250-5050","mem":null,"pub":27,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"명칭정비 (구 플레이어스골프클럽 / 춘천 동산면)"},{"num":44,"region":"강원권","change":"기존","name":"라비에벨컨트리클럽","addr":"강원 춘천시 동산면 종자리로 436","tel":"033-245-7000","mem":null,"pub":36,"caterer":"그린나래","keyman":"이상혁","role":"지배인","mobile":null,"wh":"춘천세계","draft":"마이쉘","can":null,"note":null},{"num":45,"region":"강원권","change":"기존","name":"베어크리크 춘천","addr":"강원 춘천시 신동면 김유정로 730","tel":"1899-0115","mem":null,"pub":18,"caterer":"신세계푸드","keyman":"이민욱","role":"점장","mobile":"010-4162-1753","wh":"원천주류","draft":"스텔라","can":null,"note":null},{"num":46,"region":"강원권","change":"기존","name":"남춘천컨트리클럽","addr":"강원 춘천시 신동면 오봉길 156","tel":"033-269-3000","mem":18,"pub":null,"caterer":"직영","keyman":"박상영","role":"지배인","mobile":"010-4787-2475","wh":"춘천세계","draft":null,"can":null,"note":null},{"num":47,"region":"강원권","change":"기존","name":"라데나골프클럽","addr":"강원 춘천시 신동면 칠전동길 72","tel":"033-260-1114","mem":18,"pub":null,"caterer":"두산","keyman":"함동희","role":"대리","mobile":"010-4597-1183","wh":null,"draft":null,"can":null,"note":null},{"num":48,"region":"강원권","change":"상호변경","name":"오투리조트CC","addr":"강원 태백시 서학로 861","tel":"033-580-7700","mem":18,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"명칭정비 (구 오투리조트 퍼블릭 / 태백)"},{"num":49,"region":"강원권","change":"기존","name":"알펜시아 트룬컨트리클럽","addr":"강원 평창군 대관령면 솔봉로 325","tel":"033-339-0000","mem":27,"pub":null,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":50,"region":"강원권","change":"기존","name":"알펜시아700골프클럽","addr":"강원 평창군 대관령면 수하리 240-72","tel":"033-339-0000","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":51,"region":"강원권","change":"기존","name":"용평리조트 용평골프클럽","addr":"강원 평창군 대관령면 올림픽로 715","tel":"033-335-5757","mem":18,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":52,"region":"강원권","change":"기존","name":"버치힐골프클럽","addr":"강원 평창군 대관령면 올림픽로 715 용평리조트 내","tel":"1522-3111","mem":18,"pub":null,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":53,"region":"강원권","change":"기존","name":"태기산CC 클럽하우스","addr":"강원 평창군 봉평면 태기로 174","tel":"033-330-3100","mem":null,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":54,"region":"강원권","change":"기존","name":"휘닉스평창 휘닉스CC","addr":"강원 평창군 봉평면 태기로 227","tel":"1577-0755","mem":18,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":55,"region":"강원권","change":"위탁·도매갱신","name":"힐드로사이컨트리클럽","addr":"강원 홍천군 남면 한서로 2840","tel":"033-439-3300","mem":null,"pub":18,"caterer":"CJ프레시웨이","keyman":"박경선","role":"점장","mobile":null,"wh":"원천종합","draft":null,"can":null,"note":"위탁·도매 반영 (CJ프레시웨이 / 원천종합)"},{"num":56,"region":"강원권","change":"기존","name":"세이지우드 홍천","addr":"강원 홍천군 두촌면 광석로 898-160","tel":"033-439-1000","mem":null,"pub":27,"caterer":"직영","keyman":"주민수","role":"대리","mobile":"010-4312-8779","wh":"에이스주산","draft":"바이엔","can":null,"note":null},{"num":57,"region":"강원권","change":"오픈예정","name":"홍천 구만리/북방면 신규CC (오픈예정)","addr":"강원 홍천군 북방면 구만리 일원","tel":"-","mem":null,"pub":27,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"오픈예정 (홍천 북방면 일대 대규모 신규 골프장)"},{"num":58,"region":"강원권","change":"상호변경","name":"카스카디아CC","addr":"강원 홍천군 북방면 팔봉산로 1759","tel":"033-439-0100","mem":null,"pub":27,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"상호변경/정식개장 (구 유니골프앤리조트 예정지, 2023.07 그랜드오픈)"},{"num":59,"region":"강원권","change":"위탁·도매갱신","name":"클럽모우골프클럽","addr":"강원 홍천군 서면 장락동길 111","tel":"033-439-9000","mem":27,"pub":null,"caterer":"CJ프레시웨이","keyman":null,"role":null,"mobile":null,"wh":"원천종합","draft":null,"can":null,"note":"위탁·도매 반영 (CJ프레시웨이 / 원천종합)"},{"num":60,"region":"강원권","change":"기존","name":"샤인데일골프리조트","addr":"강원 홍천군 서면 한서로 247-156","tel":"033-430-1000","mem":null,"pub":27,"caterer":"워커힐","keyman":"강태길","role":"지배인","mobile":"010-2833-8109","wh":"원천주류","draft":"어메이징","can":null,"note":null},{"num":61,"region":"강원권","change":"기존","name":"비발디파크 컨트리클럽","addr":"강원 홍천군 서면 한치골길 200","tel":"1644-0063","mem":18,"pub":27,"caterer":"CJ프레시웨이","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":62,"region":"강원권","change":"기존","name":"소노펠리체컨트리클럽","addr":"강원 홍천군 서면 한치골길 541-123","tel":"1644-0063","mem":18,"pub":null,"caterer":"CJ프레시웨이","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":63,"region":"강원권","change":"기존","name":"비콘힐스골프클럽","addr":"강원 홍천군 홍천읍 높은터로 533","tel":"033-439-5000","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":"하이네켄","can":null,"note":null},{"num":64,"region":"강원권","change":"오픈예정","name":"횡성 공근/청일 신규CC (오픈예정)","addr":"강원 횡성군 공근면 일원","tel":"-","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"오픈예정 (횡성권 신규 대중제 골프장)"},{"num":65,"region":"강원권","change":"기존","name":"웰리힐리컨트리클럽","addr":"강원 횡성군 둔내면 조항로 360","tel":"1544-8833","mem":36,"pub":10,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":66,"region":"강원권","change":"신규오픈","name":"벨라45 컨트리클럽","addr":"강원 횡성군 서원면 경강로 1054","tel":"033-340-4500","mem":18,"pub":27,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"신규오픈 (2024년 개장 / 총 45홀 규모 리조트형)"},{"num":67,"region":"강원권","change":"기존","name":"옥스필드컨트리클럽","addr":"강원 횡성군 서원면 경강로유현6길 28","tel":"033-340-7700","mem":18,"pub":null,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":68,"region":"강원권","change":"기존","name":"동원썬밸리컨트리클럽","addr":"강원 횡성군 서원면 서원서로339번길 90","tel":"033-344-5308","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":69,"region":"강원권","change":"기존","name":"벨라스톤컨트리클럽","addr":"강원 횡성군 서원면 옥계9길 124","tel":"033-340-9000","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":70,"region":"강원권","change":"기존","name":"알프스대영CC","addr":"강원 횡성군 우천면 한우로 1295","tel":"033-340-8000","mem":null,"pub":18,"caterer":null,"keyman":"김현","role":"지배인","mobile":"010-5484-0383","wh":null,"draft":"하이네켄","can":null,"note":null},{"num":71,"region":"경기권","change":"위탁·도매갱신","name":"베뉴지컨트리클럽","addr":"경기 가평군 가평읍 용추로171번길 100","tel":"031-582-5999","mem":null,"pub":18,"caterer":"아워홈","keyman":"이종현","role":null,"mobile":"010-8513-6538","wh":"중앙종합/수원세계","draft":null,"can":null,"note":"위탁·도매 반영 (아워홈 / 중앙종합/수원세계)"},{"num":72,"region":"경기권","change":"기존","name":"크리스탈밸리컨트리클럽","addr":"경기 가평군 상면 대보간선로 602-111","tel":"031-589-5000","mem":18,"pub":null,"caterer":"웰스토리","keyman":null,"role":null,"mobile":null,"wh":"에이스주산","draft":"바이엔","can":null,"note":null},{"num":73,"region":"경기권","change":"기존","name":"가평베네스트골프클럽","addr":"경기 가평군 상면 둔덕말길 232","tel":"1577-9727","mem":27,"pub":null,"caterer":"삼성물산","keyman":null,"role":null,"mobile":null,"wh":"일오종합","draft":null,"can":null,"note":null},{"num":74,"region":"경기권","change":"상호변경","name":"마이다스밸리 청평GC","addr":"경기 가평군 설악면 다락재로 73-111","tel":"031-589-9000","mem":18,"pub":null,"caterer":null,"keyman":"안주현","role":"식음팀장","mobile":"010-3314-8160","wh":null,"draft":null,"can":null,"note":"상호변경 (구 청평마이다스골프클럽, 2022.01)"},{"num":75,"region":"경기권","change":"위탁·도매갱신","name":"프리스틴밸리GC","addr":"경기 가평군 설악면 유명로 1243-199","tel":"031-589-2000","mem":18,"pub":null,"caterer":"CJ프레시웨이","keyman":"최인용","role":"점장","mobile":"010-2393-6949","wh":"원천종합","draft":null,"can":null,"note":"위탁·도매 반영 (CJ프레시웨이 / 원천종합)"},{"num":76,"region":"경기권","change":"기존","name":"아난티코드 골프클럽","addr":"경기 가평군 설악면 유명로 961-34","tel":"031-589-3000","mem":27,"pub":null,"caterer":"직영","keyman":"염승훈","role":"과장","mobile":"010-7180-6779","wh":"에이스,의창실업","draft":"바이엔","can":null,"note":null},{"num":77,"region":"경기권","change":"기존","name":"더스테이힐링파크 퍼블릭","addr":"경기 가평군 설악면 한서로268번길 157","tel":"031-580-3800","mem":null,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":78,"region":"경기권","change":"기존","name":"리앤리컨트리클럽","addr":"경기 가평군 조종면 운악청계로 702-24","tel":"031-580-9000","mem":null,"pub":18,"caterer":"세종외식","keyman":"박유진","role":"지배인","mobile":"010-4609-3227","wh":null,"draft":null,"can":null,"note":null},{"num":79,"region":"경기권","change":"기존","name":"썬힐골프클럽","addr":"경기 가평군 조종면 운악청계로 809","tel":"031-585-7900","mem":18,"pub":18,"caterer":null,"keyman":"박정호","role":"매니저","mobile":"010-4187-7097","wh":null,"draft":null,"can":null,"note":null},{"num":80,"region":"경기권","change":"기존","name":"한양컨트리클럽","addr":"경기 고양시 덕양구 고양대로1643번길 164","tel":"031-960-6900","mem":36,"pub":9,"caterer":"직영","keyman":"어민수","role":"대리","mobile":"010-8827-4415","wh":null,"draft":null,"can":null,"note":null},{"num":81,"region":"경기권","change":"기존","name":"일산 스프링힐스컨트리클럽","addr":"경기 고양시 덕양구 산황로 62","tel":"031-969-2000","mem":null,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":82,"region":"경기권","change":"기존","name":"뉴코리아컨트리클럽","addr":"경기 고양시 덕양구 신원동 227-12","tel":"02-353-0091","mem":18,"pub":null,"caterer":"직영","keyman":"정해준","role":"주임","mobile":"010-3808-5016","wh":"동부주류","draft":"바르슈테이너","can":null,"note":null},{"num":83,"region":"경기권","change":"기존","name":"올림픽컨트리클럽","addr":"경기 고양시 덕양구 혜음로 301","tel":"031-962-0101","mem":null,"pub":9,"caterer":"직영","keyman":null,"role":null,"mobile":null,"wh":"금파주류","draft":"하이네켄","can":"페로니","note":null},{"num":84,"region":"경기권","change":"기존","name":"고양컨트리클럽","addr":"경기 고양시 덕양구 흥도로 304-23","tel":"031-960-7700","mem":null,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":85,"region":"경기권","change":"기존","name":"이스트밸리컨트리클럽","addr":"경기 광주시 곤지암읍 건업길 195","tel":"031-760-3800","mem":27,"pub":null,"caterer":null,"keyman":"이경숙","role":"지배인","mobile":"010-5339-7269","wh":"에이스주산","draft":null,"can":null,"note":null},{"num":86,"region":"경기권","change":"기존","name":"중부컨트리클럽","addr":"경기 광주시 곤지암읍 경충대로 451","tel":"031-762-6588","mem":18,"pub":null,"caterer":"직영","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":87,"region":"경기권","change":"기존","name":"그린힐컨트리클럽","addr":"경기 광주시 곤지암읍 내선길 176","tel":"031-799-8500","mem":18,"pub":null,"caterer":"신안","keyman":"송석환","role":"식음팀장","mobile":"010-2775-1330","wh":null,"draft":null,"can":null,"note":null},{"num":88,"region":"경기권","change":"위탁·도매갱신","name":"남촌컨트리클럽","addr":"경기 광주시 곤지암읍 부항길 135-38","tel":"031-769-0333","mem":18,"pub":null,"caterer":"CJ프레시웨이","keyman":"김태회","role":"부지배인","mobile":"010-4516-1885","wh":"원천종합","draft":"스텔라","can":null,"note":"위탁·도매 반영 (CJ프레시웨이 / 원천종합)"},{"num":89,"region":"경기권","change":"기존","name":"큐로컨트리클럽","addr":"경기 광주시 곤지암읍 오향길 180","tel":"031-799-6000","mem":null,"pub":27,"caterer":"신세계푸드","keyman":"장명훈","role":"점장","mobile":"010-3781-7630","wh":"원천주류","draft":"하이네켄","can":null,"note":null},{"num":90,"region":"경기권","change":"신규추가(위탁)","name":"로제비앙GC (경기 광주)","addr":"경기 광주시 곤지암읍 일원","tel":"-","mem":null,"pub":18,"caterer":"웰스토리","keyman":null,"role":null,"mobile":null,"wh":"분당포도","draft":null,"can":null,"note":"신규편입 및 위탁·도매 반영 (웰스토리 / 분당포도)"},{"num":91,"region":"경기권","change":"기존","name":"곤지암골프클럽","addr":"경기 광주시 도척면 도척윗로 280","tel":"031-760-3555","mem":18,"pub":null,"caterer":"직영","keyman":"이동훈","role":"주임","mobile":"010-5316-2669","wh":"에이스주산","draft":"에비스","can":null,"note":null},{"num":92,"region":"경기권","change":"기존","name":"뉴서울컨트리클럽","addr":"경기 광주시 삼지곡길 95","tel":"031-760-8000","mem":36,"pub":null,"caterer":"직영","keyman":"백민석","role":"지배인","mobile":"010-8372-5717","wh":"기흥주류","draft":null,"can":null,"note":null},{"num":93,"region":"경기권","change":"위탁·도매갱신","name":"강남 300컨트리클럽","addr":"경기 광주시 새말길 353","tel":"031-719-0300","mem":18,"pub":null,"caterer":"아워홈","keyman":"이진우","role":"점장","mobile":"010-4657-6955","wh":"중앙종합/수원세계","draft":null,"can":null,"note":"위탁·도매 반영 (아워홈 / 중앙종합/수원세계)"},{"num":94,"region":"경기권","change":"기존","name":"태릉체력단련장","addr":"경기 구리시 갈매동 산 109-10","tel":"02-970-7320","mem":18,"pub":null,"caterer":null,"keyman":"이희연","role":"지배인","mobile":"010-9747-6010","wh":null,"draft":null,"can":null,"note":null},{"num":95,"region":"경기권","change":"기존","name":"안양베네스트GC","addr":"경기 군포시 군포로 364","tel":"031-460-3301","mem":18,"pub":null,"caterer":"삼성물산","keyman":null,"role":null,"mobile":null,"wh":"일오종합","draft":"바이엔","can":null,"note":null},{"num":96,"region":"경기권","change":"위탁·도매갱신","name":"김포씨사이드CC","addr":"경기 김포시 월곶면 김포대로2801번길 219","tel":"031-987-9992","mem":null,"pub":18,"caterer":"웰스토리","keyman":"박경완","role":"부지배인","mobile":"010-5133-5245","wh":"분당포도","draft":null,"can":null,"note":"위탁·도매 반영 (웰스토리 / 분당포도)"},{"num":97,"region":"경기권","change":"기존","name":"남양주컨트리클럽","addr":"경기 남양주시 오남읍 진건오남로 516-31","tel":"031-529-6060","mem":null,"pub":9,"caterer":"직영","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":98,"region":"경기권","change":"기존","name":"한림광릉컨트리클럽","addr":"경기 남양주시 진접읍 팔야로 280","tel":"031-528-7001","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":99,"region":"경기권","change":"위탁·도매갱신","name":"비전힐스컨트리클럽","addr":"경기 남양주시 화도읍 마치로 226-220","tel":"031-595-3355","mem":18,"pub":null,"caterer":"웰스토리","keyman":"양덕규","role":"과장","mobile":"010-3783-3759","wh":"분당포도","draft":null,"can":null,"note":"위탁·도매 반영 (웰스토리 / 분당포도)"},{"num":100,"region":"경기권","change":"기존","name":"양주컨트리클럽","addr":"경기 남양주시 화도읍 북한강로 1525-52","tel":"031-592-6060","mem":18,"pub":null,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":101,"region":"경기권","change":"기존","name":"해비치컨트리클럽","addr":"경기 남양주시 화도읍 재재기로190번길 160","tel":"031-579-3000","mem":18,"pub":null,"caterer":null,"keyman":"장송열","role":"식음팀장","mobile":"010-8668-4789","wh":null,"draft":null,"can":null,"note":null},{"num":102,"region":"경기권","change":"기존","name":"티클라우드CC","addr":"경기 동두천시 평화로 3202","tel":"031-869-7777","mem":18,"pub":null,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":103,"region":"경기권","change":"기존","name":"남서울컨트리클럽","addr":"경기 성남시 분당구 백현동 511-25번지","tel":"031-709-6000","mem":18,"pub":null,"caterer":"직영","keyman":"박찬희","role":"점장","mobile":"010-5317-2727","wh":"직납","draft":"필스너","can":null,"note":null},{"num":104,"region":"경기권","change":"기존","name":"수원 체력단련장 골프장","addr":"경기 수원시 권선구 경수대로168번길 77","tel":"000-000-0000","mem":null,"pub":null,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":105,"region":"경기권","change":"위탁·도매갱신","name":"솔트베이골프클럽","addr":"경기 시흥시 마유로 987","tel":"031-400-0000","mem":null,"pub":18,"caterer":"CJ프레시웨이","keyman":null,"role":null,"mobile":null,"wh":"원천종합","draft":null,"can":null,"note":"위탁·도매 반영 (CJ프레시웨이 / 원천종합)"},{"num":106,"region":"경기권","change":"기존","name":"아세코밸리골프클럽","addr":"경기 시흥시 마전로 307","tel":"031-488-8000","mem":null,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":107,"region":"경기권","change":"상호변경","name":"더헤븐 컨트리클럽","addr":"경기 안산시 단원구 대선로 466","tel":"032-884-1004","mem":18,"pub":9,"caterer":null,"keyman":"양영갑","role":"과장","mobile":"010-8438-8688","wh":null,"draft":null,"can":null,"note":"상호변경 (구 아일랜드CC, 2023.06 / 안산 대부도)"},{"num":108,"region":"경기권","change":"기존","name":"제일컨트리클럽","addr":"경기 안산시 상록구 태마당로 28","tel":"031-400-2500","mem":27,"pub":9,"caterer":null,"keyman":"우명수","role":"지배인","mobile":"010-8733-7929","wh":null,"draft":"클라우드","can":null,"note":null},{"num":109,"region":"경기권","change":"기존","name":"신안컨트리클럽 퍼블릭","addr":"경기 안성시 고삼면 개울말길 149","tel":"031-8046-0777","mem":18,"pub":9,"caterer":null,"keyman":"김광민","role":"식음팀장","mobile":"010-9925-5012","wh":null,"draft":null,"can":null,"note":null},{"num":110,"region":"경기권","change":"기존","name":"안성베네스트골프클럽","addr":"경기 안성시 금광면 삼흥로 660","tel":"031-670-0777","mem":27,"pub":9,"caterer":"삼성물산","keyman":"권숙영","role":"책임","mobile":"010-9131-2434","wh":"일오종합","draft":"바이엔","can":null,"note":null},{"num":111,"region":"경기권","change":"기존","name":"골프존카운티 안성H","addr":"경기 안성시 보개면 보삼로 302","tel":"031-8056-0700","mem":null,"pub":18,"caterer":"웰스토리","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":112,"region":"경기권","change":"위탁·도매갱신","name":"이글몬트CC","addr":"경기 안성시 보개면 북가현리 산 106","tel":"031-675-7000","mem":null,"pub":18,"caterer":"CJ프레시웨이","keyman":null,"role":null,"mobile":null,"wh":"원천종합","draft":null,"can":null,"note":"위탁·도매 반영 (CJ프레시웨이 / 원천종합)"},{"num":113,"region":"경기권","change":"위탁·도매갱신","name":"윈체스트골프클럽","addr":"경기 안성시 서운면 오촌길 97-31","tel":"031-678-9000","mem":null,"pub":18,"caterer":"SS클럽","keyman":"윤진근","role":"식음팀장","mobile":"010-9187-4266","wh":"대정","draft":null,"can":null,"note":"위탁·도매 반영 (SS클럽 / 대정)"},{"num":114,"region":"경기권","change":"기존","name":"골프존카운티 안성W","addr":"경기 안성시 양성면 교동길 19-70","tel":"031-670-0500","mem":null,"pub":18,"caterer":"웰스토리","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":115,"region":"경기권","change":"위탁·도매갱신","name":"마에스트로컨트리클럽","addr":"경기 안성시 양성면 안성맞춤대로 2134-36","tel":"031-8046-1000","mem":null,"pub":18,"caterer":"세종외식","keyman":null,"role":null,"mobile":null,"wh":"분당포도","draft":null,"can":null,"note":"위탁·도매 반영 (세종외식 / 분당포도)"},{"num":116,"region":"경기권","change":"위탁·도매갱신","name":"파인크리크컨트리클럽","addr":"경기 안성시 양성면 안성맞춤대로 2417-66","tel":"031-672-0071","mem":null,"pub":27,"caterer":"웰스토리","keyman":"구치관","role":"점장","mobile":"010-9473-0940","wh":"분당포도","draft":"칼스버그","can":null,"note":"위탁·도매 반영 (웰스토리 / 분당포도)"},{"num":117,"region":"경기권","change":"기존","name":"루나힐스안성컨트리클럽","addr":"경기 안성시 양성면 약산길 67-6","tel":"031-612-6000","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":"에이스주산","draft":null,"can":null,"note":null},{"num":118,"region":"경기권","change":"기존","name":"한림안성CC","addr":"경기 안성시 양성면 양성로 349-61","tel":"031-1666-1619","mem":null,"pub":9,"caterer":null,"keyman":"권경화","role":"지배인","mobile":"010-9133-0881","wh":null,"draft":null,"can":null,"note":null},{"num":119,"region":"경기권","change":"신규추가(위탁)","name":"크리스밸리CC","addr":"경기 안성시 일원","tel":"-","mem":null,"pub":18,"caterer":"아워홈","keyman":null,"role":null,"mobile":null,"wh":"중앙종합/수원세계","draft":null,"can":null,"note":"신규편입 및 위탁·도매 반영 (아워홈 / 중앙종합·수원세계)"},{"num":120,"region":"경기권","change":"신규오픈","name":"일죽썬밸리CC","addr":"경기 안성시 일죽면 주래본죽로 124-26","tel":"031-670-9000","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"신규오픈 (2022년 개장 / 동광종합토건 썬밸리 계열)"},{"num":121,"region":"경기권","change":"기존","name":"안성컨트리클럽","addr":"경기 안성시 죽산면 걸미로 487","tel":"031-674-9111","mem":18,"pub":null,"caterer":null,"keyman":"김기환","role":"과장","mobile":"010-4324-9242","wh":null,"draft":null,"can":null,"note":null},{"num":122,"region":"경기권","change":"위탁·도매갱신","name":"에덴블루컨트리클럽","addr":"경기 안성시 죽산면 녹배길 175","tel":"1588-7207","mem":null,"pub":27,"caterer":"웰스토리","keyman":"전우태","role":null,"mobile":"010-7414-1217","wh":"분당포도","draft":null,"can":null,"note":"위탁·도매 반영 (웰스토리 / 분당포도)"},{"num":123,"region":"경기권","change":"위탁·도매갱신","name":"골프클럽Q","addr":"경기 안성시 죽산면 장계길 20-229","tel":"031-8046-7000","mem":null,"pub":18,"caterer":"CJ프레시웨이","keyman":"김효정","role":null,"mobile":"010-7662-9462","wh":"원천종합","draft":null,"can":null,"note":"위탁·도매 반영 (CJ프레시웨이 / 원천종합)"},{"num":124,"region":"경기권","change":"기존","name":"송추컨트리클럽","addr":"경기 양주시 광적면 비암리 산 23-1","tel":"031-871-9410","mem":18,"pub":null,"caterer":"직영","keyman":"박상희","role":"팀장","mobile":"010-8759-8070","wh":"일산종합","draft":"하이네켄","can":null,"note":null},{"num":125,"region":"경기권","change":"기존","name":"레이크우드컨트리클럽","addr":"경기 양주시 만송로 244","tel":"031-820-1500","mem":27,"pub":9,"caterer":"르메르디앙","keyman":null,"role":null,"mobile":null,"wh":"동부주류","draft":"필스너","can":null,"note":null},{"num":126,"region":"경기권","change":"기존","name":"루이힐스골프클럽","addr":"경기 양주시 어하고개로 186-54","tel":"031-842-0007","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":127,"region":"경기권","change":"기존","name":"더스타휴 골프앤리조트","addr":"경기 양평군 양동면 양동로 756","tel":"031-770-9900","mem":18,"pub":null,"caterer":"직영","keyman":"장진영","role":"지배인","mobile":"010-8328-9111","wh":"춘천세계","draft":"스윙켈스, 바이엔","can":null,"note":null,"_edited":true},{"num":128,"region":"경기권","change":"기존","name":"양평TPC골프클럽","addr":"경기 양평군 지평면 대평평장길 113-8","tel":"031-772-3000","mem":27,"pub":null,"caterer":"아코스","keyman":"권응식","role":"지배인","mobile":"010-5474-9236","wh":"중앙종합","draft":null,"can":null,"note":null},{"num":129,"region":"경기권","change":"기존","name":"트리니티컨트리클럽","addr":"경기 여주시 가남읍 가남로 320-21","tel":"031-887-7900","mem":18,"pub":null,"caterer":"조선호텔","keyman":"유호정","role":"캡틴","mobile":"010-5141-2315","wh":"대진주류","draft":"에비스","can":null,"note":null},{"num":130,"region":"경기권","change":"기존","name":"동여주체력단련장","addr":"경기 여주시 가남읍 그랜드그린길 107","tel":"031-887-8444","mem":18,"pub":null,"caterer":"신세계푸드","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":131,"region":"경기권","change":"기존","name":"금강컨트리클럽","addr":"경기 여주시 가남읍 금강그린길 84","tel":"031-880-6000","mem":18,"pub":9,"caterer":"현대그린푸드","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":132,"region":"경기권","change":"위탁·도매갱신","name":"솔모로컨트리클럽","addr":"경기 여주시 가남읍 솔모로그린길 171","tel":"031-880-7116","mem":36,"pub":null,"caterer":"아워홈","keyman":"장세창","role":"지배인","mobile":"010-8536-3045","wh":"중앙종합/수원세계","draft":null,"can":null,"note":"위탁·도매 반영 (아워홈 / 중앙종합/수원세계)"},{"num":133,"region":"경기권","change":"기존","name":"빅토리아골프클럽 퍼블릭","addr":"경기 여주시 가남읍 송삼로 191","tel":"031-883-0111","mem":null,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":134,"region":"경기권","change":"기존","name":"아리지컨트리클럽","addr":"경기 여주시 가남읍 아리지그린길 68","tel":"031-887-5678","mem":null,"pub":27,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":135,"region":"경기권","change":"기존","name":"자유컨트리클럽","addr":"경기 여주시 가남읍 자유그린길 69","tel":"031-887-7700","mem":18,"pub":null,"caterer":"신세계푸드","keyman":null,"role":null,"mobile":null,"wh":"원천주류","draft":"바르슈테이너","can":null,"note":null},{"num":136,"region":"경기권","change":"기존","name":"남여주골프클럽","addr":"경기 여주시 가여로 532","tel":"031-880-6700","mem":null,"pub":27,"caterer":"신세계푸드","keyman":null,"role":null,"mobile":null,"wh":"원천주류","draft":null,"can":null,"note":null},{"num":137,"region":"경기권","change":"기존","name":"여주썬밸리컨트리클럽","addr":"경기 여주시 강천면 강문로 872","tel":"031-887-5300","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":138,"region":"경기권","change":"오픈예정","name":"여주 강천CC (오픈예정)","addr":"경기 여주시 강천면 걸은리 일원","tel":"-","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"오픈예정 (경기 여주권 신규 조성 대중제 18홀)"},{"num":139,"region":"경기권","change":"위탁·도매갱신","name":"캐슬파인 골프클럽","addr":"경기 여주시 강천면 부평로 580","tel":"031-880-8656","mem":null,"pub":18,"caterer":"CJ프레시웨이","keyman":"이은애","role":"점장","mobile":null,"wh":"원천종합","draft":null,"can":null,"note":"위탁·도매 반영 (CJ프레시웨이 / 원천종합)"},{"num":140,"region":"경기권","change":"위탁·도매갱신","name":"360도컨트리클럽","addr":"경기 여주시 강천면 부평로 609","tel":"031-880-3600","mem":null,"pub":18,"caterer":"세종외식","keyman":"신성철","role":null,"mobile":"010-7414-8300","wh":"분당포도","draft":"하이네켄","can":null,"note":"위탁·도매 반영 (세종외식 / 분당포도)"},{"num":141,"region":"경기권","change":"위탁·도매갱신","name":"이포컨트리클럽","addr":"경기 여주시 금사면 장흥로 416","tel":"031-886-8100","mem":18,"pub":6,"caterer":"세종외식","keyman":null,"role":null,"mobile":null,"wh":"분당포도","draft":null,"can":null,"note":"위탁·도매 반영 (세종외식 / 분당포도)"},{"num":142,"region":"경기권","change":"기존","name":"블루헤런골프클럽","addr":"경기 여주시 대신면 고달사로 67","tel":"031-880-0700","mem":18,"pub":null,"caterer":"직영","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":143,"region":"경기권","change":"기존","name":"해슬리나인브릿지CC","addr":"경기 여주시 명품1로 76","tel":"031-887-9999","mem":18,"pub":null,"caterer":null,"keyman":"강상구","role":"캡틴","mobile":"010-8789-4116","wh":null,"draft":null,"can":null,"note":null},{"num":144,"region":"경기권","change":"기존","name":"신라컨트리클럽","addr":"경기 여주시 북내면 신라그린길 84","tel":"031-886-3030","mem":27,"pub":null,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":145,"region":"경기권","change":"위탁·도매갱신","name":"스카이밸리 컨트리클럽","addr":"경기 여주시 북내면 운촌길 254","tel":"031-880-8800","mem":27,"pub":9,"caterer":"SS클럽","keyman":"김희중","role":"캡틴","mobile":"010-2331-0216","wh":"대정","draft":null,"can":null,"note":"위탁·도매 반영 (SS클럽 / 대정)"},{"num":146,"region":"경기권","change":"위탁·도매갱신","name":"루트52컨트리클럽","addr":"경기 여주시 북내면 중암1길 36","tel":"031-882-0052","mem":null,"pub":18,"caterer":"웰스토리","keyman":"김철민","role":null,"mobile":"010-8513-6538","wh":"분당포도","draft":null,"can":null,"note":"위탁·도매 반영 (웰스토리 / 분당포도)"},{"num":147,"region":"경기권","change":"기존","name":"렉스필드컨트리클럽","addr":"경기 여주시 산북면 광여로 1115","tel":"031-880-8700","mem":18,"pub":9,"caterer":"직영","keyman":"고석만","role":"지배인","mobile":"010-9182-2125","wh":"에이스주산","draft":"바바리아","can":null,"note":null},{"num":148,"region":"경기권","change":"기존","name":"세라지오컨트리클럽","addr":"경기 여주시 여양로 530","tel":"031-887-8700","mem":null,"pub":18,"caterer":"웰스토리","keyman":"선민호","role":null,"mobile":"010-4006-1118","wh":"포도분당","draft":"페로니","can":null,"note":null},{"num":149,"region":"경기권","change":"상호변경","name":"여주클래식골프클럽","addr":"경기 여주시 월평로 78","tel":"031-883-7000","mem":27,"pub":null,"caterer":null,"keyman":"김혜향","role":"지배인","mobile":"010-9177-6483","wh":null,"draft":null,"can":null,"note":"상호변경 (구 여주컨트리클럽, 2025.03)"},{"num":150,"region":"경기권","change":"위탁·도매갱신","name":"페럼클럽 퍼블릭","addr":"경기 여주시 점동면 사곡리 450","tel":"031-887-7000","mem":null,"pub":18,"caterer":"SS클럽","keyman":null,"role":null,"mobile":null,"wh":"대정","draft":"하이네켄","can":null,"note":"위탁·도매 반영 (SS클럽 / 대정)"},{"num":151,"region":"경기권","change":"기존","name":"소피아그린 컨트리클럽","addr":"경기 여주시 점동면 소피아그린길 84","tel":"031-887-8100","mem":null,"pub":27,"caterer":"아워홈","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":152,"region":"경기권","change":"오픈예정","name":"연천 미산/백학 신규CC (오픈예정)","addr":"경기 연천군 백학면 일원","tel":"-","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"오픈예정 (경기 북부 연천권 신규 골프장)"},{"num":153,"region":"경기권","change":"위탁·도매갱신","name":"자유로컨트리클럽","addr":"경기 연천군 백학면 학곡리 84","tel":"031-839-1500","mem":null,"pub":null,"caterer":"CJ프레시웨이","keyman":null,"role":null,"mobile":null,"wh":"원천종합","draft":null,"can":null,"note":"위탁·도매 반영 (CJ프레시웨이 / 원천종합)"},{"num":154,"region":"경기권","change":"기존","name":"노스폴CC (운영중지)","addr":"경기 연천군 전곡읍 양연로 1268","tel":"031-833-2232","mem":null,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":155,"region":"경기권","change":"기존","name":"한성컨트리클럽","addr":"경기 용인시 기흥구 구교동로 151","tel":"031-284-3831","mem":27,"pub":null,"caterer":null,"keyman":"신경호","role":"식음팀장","mobile":"010-2826-8058","wh":null,"draft":null,"can":null,"note":null},{"num":156,"region":"경기권","change":"위탁·도매갱신","name":"골드컨트리클럽","addr":"경기 용인시 기흥구 기흥단지로 398","tel":"031-286-8111","mem":36,"pub":null,"caterer":"CJ프레시웨이","keyman":"김경종","role":"지배인","mobile":"010-5378-3223","wh":"원천종합","draft":"어메이징","can":null,"note":"위탁·도매 반영 (CJ프레시웨이 / 원천종합)"},{"num":157,"region":"경기권","change":"기존","name":"남부컨트리클럽","addr":"경기 용인시 기흥구 사은로 163","tel":"031-280-4100","mem":18,"pub":null,"caterer":"직영","keyman":"김상훈","role":"지배인","mobile":"010-9237-1201","wh":"에이스주산","draft":"필스너","can":null,"note":null},{"num":158,"region":"경기권","change":"기존","name":"88컨트리클럽","addr":"경기 용인시 기흥구 석성로521번길 169","tel":"1577-8871","mem":36,"pub":null,"caterer":"직영","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":159,"region":"경기권","change":"기존","name":"수원컨트리클럽","addr":"경기 용인시 기흥구 중부대로 495","tel":"031-281-6611","mem":36,"pub":null,"caterer":"직영","keyman":"김창호","role":"대리","mobile":"010-3133-5093","wh":"에이스,기흥","draft":"에비스","can":null,"note":null},{"num":160,"region":"경기권","change":"기존","name":"태광컨트리클럽","addr":"경기 용인시 기흥구 흥덕4로 77","tel":"1877-6001","mem":27,"pub":9,"caterer":null,"keyman":"김지훈","role":"식음팀장","mobile":"010-6381-3024","wh":"에이스주산","draft":null,"can":null,"note":null},{"num":161,"region":"경기권","change":"기존","name":"한림용인CC","addr":"경기 용인시 처인구 남사읍 경기동로 628","tel":"031-336-8350","mem":27,"pub":null,"caterer":"아코스","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":162,"region":"경기권","change":"기존","name":"플라자컨트리클럽 용인","addr":"경기 용인시 처인구 남사읍 봉무로153번길 79","tel":"031-332-1122","mem":36,"pub":null,"caterer":"한화 호텔&리조트","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":163,"region":"경기권","change":"기존","name":"한원컨트리클럽","addr":"경기 용인시 처인구 남사읍 전나무골길2번길 94","tel":"031-373-7111","mem":27,"pub":null,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":164,"region":"경기권","change":"기존","name":"레이크사이드컨트리클럽","addr":"경기 용인시 처인구 모현읍 능원로 181","tel":"031-334-2111","mem":18,"pub":36,"caterer":"삼성물산","keyman":"박정완","role":"지배인","mobile":"010-9712-3432","wh":"일오종합","draft":"하이네켄","can":null,"note":null},{"num":165,"region":"경기권","change":"기존","name":"써닝포인트CC","addr":"경기 용인시 처인구 백암면 고안로51번길 205","tel":"031-329-0900","mem":null,"pub":18,"caterer":"직영","keyman":"황성훈","role":"지배인","mobile":"010-5238-3373","wh":"우리주류","draft":null,"can":null,"note":null},{"num":166,"region":"경기권","change":"기존","name":"용인컨트리클럽","addr":"경기 용인시 처인구 백암면 황새울로 255","tel":"031-332-3323","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":167,"region":"경기권","change":"위탁·도매갱신","name":"은화삼컨트리클럽","addr":"경기 용인시 처인구 백옥대로 860-38","tel":"031-335-8255","mem":18,"pub":null,"caterer":"세종외식","keyman":null,"role":null,"mobile":null,"wh":"분당포도","draft":null,"can":null,"note":"위탁·도매 반영 (세종외식 / 분당포도)"},{"num":168,"region":"경기권","change":"기존","name":"선봉대체력단련장","addr":"경기 용인시 처인구 성산로 57","tel":"031-331-7230","mem":null,"pub":null,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":169,"region":"경기권","change":"위탁·도매갱신","name":"양지파인골프클럽","addr":"경기 용인시 처인구 양지면 남평로 112 양지파인리조트 내","tel":"031-338-2001","mem":27,"pub":null,"caterer":"아워홈","keyman":"조철현","role":"지배인","mobile":null,"wh":"중앙종합/수원세계","draft":"바바리아","can":null,"note":"위탁·도매 반영 (아워홈 / 중앙종합/수원세계)"},{"num":170,"region":"경기권","change":"기존","name":"아시아나컨트리클럽","addr":"경기 용인시 처인구 양지면 양대로 290","tel":"031-334-8800","mem":36,"pub":null,"caterer":"직영","keyman":"이경일","role":"지배인","mobile":"010-2731-9382","wh":"에이스주산","draft":"하이네켄","can":null,"note":null},{"num":171,"region":"경기권","change":"기존","name":"블루원 용인컨트리클럽","addr":"경기 용인시 처인구 원삼면 보개원삼로1534번길 40","tel":"1899-1888","mem":18,"pub":9,"caterer":"직영","keyman":"신동훈","role":"식음팀장","mobile":"010-4744-2450","wh":null,"draft":null,"can":null,"note":null},{"num":172,"region":"경기권","change":"오픈예정","name":"용인 처인구 이동/원삼 신규CC (오픈예정)","addr":"경기 용인시 처인구 원삼면 일원","tel":"-","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"오픈예정 (용인 반도체 클러스터 인근 신규 골프장)"},{"num":173,"region":"경기권","change":"기존","name":"지산컨트리클럽","addr":"경기 용인시 처인구 원삼면 죽양대로2000번길 60","tel":"031-330-1400","mem":27,"pub":9,"caterer":"직영","keyman":null,"role":null,"mobile":null,"wh":"에이스주산","draft":"칼스버그","can":null,"note":null},{"num":174,"region":"경기권","change":"위탁·도매갱신","name":"코리아컨트리클럽","addr":"경기 용인시 처인구 이동읍 기흥단지로 579","tel":"031-334-7111","mem":27,"pub":9,"caterer":"CJ프레시웨이","keyman":"김지식","role":"부지배인","mobile":"010-5441-8827","wh":"원천종합","draft":null,"can":null,"note":"위탁·도매 반영 (CJ프레시웨이 / 원천종합)"},{"num":175,"region":"경기권","change":"기존","name":"해솔리아컨트리클럽","addr":"경기 용인시 처인구 이동읍 백자로 369","tel":"031-321-7755","mem":null,"pub":27,"caterer":"아워홈","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":176,"region":"경기권","change":"위탁·도매갱신","name":"세현컨트리클럽","addr":"경기 용인시 처인구 이동읍 백자로 450","tel":"031-670-8800","mem":null,"pub":18,"caterer":"CJ프레시웨이","keyman":"김상득","role":"지배인","mobile":"010-4876-4279","wh":"원천종합","draft":"어메이징","can":null,"note":"위탁·도매 반영 (CJ프레시웨이 / 원천종합)"},{"num":177,"region":"경기권","change":"위탁·도매갱신","name":"신원컨트리클럽","addr":"경기 용인시 처인구 이동읍 이원로 225","tel":"031-333-1800","mem":27,"pub":null,"caterer":"세종외식","keyman":"옥경수","role":"지배인","mobile":"010-7297-2392","wh":"분당포도","draft":null,"can":null,"note":"위탁·도매 반영 (세종외식 / 분당포도)"},{"num":178,"region":"경기권","change":"기존","name":"처인컨트리클럽","addr":"경기 용인시 처인구 이동읍 이원로384번길 71","tel":"031-330-8200","mem":18,"pub":null,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":179,"region":"경기권","change":"위탁·도매갱신","name":"화산컨트리클럽","addr":"경기 용인시 처인구 이동읍 화산로 239","tel":"031-329-7114","mem":18,"pub":null,"caterer":"웰스토리","keyman":"한선규","role":null,"mobile":"010-4518-0483","wh":"분당포도","draft":null,"can":null,"note":"위탁·도매 반영 (웰스토리 / 분당포도)"},{"num":180,"region":"경기권","change":"기존","name":"글렌로스골프클럽","addr":"경기 용인시 처인구 포곡읍 에버랜드로562번길 69","tel":"031-320-9601","mem":null,"pub":9,"caterer":"삼성물산","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":181,"region":"경기권","change":"기존","name":"더반골프클럽","addr":"경기 이천시 대월면 대월로 627-141","tel":"031-645-6100","mem":null,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":182,"region":"경기권","change":"기존","name":"사자체력단련장","addr":"경기 이천시 마장면 억만리로 51","tel":"031-632-3700","mem":null,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":183,"region":"경기권","change":"위탁·도매갱신","name":"뉴스프링빌컨트리클럽","addr":"경기 이천시 모가면 두미리 421-94","tel":"031-630-7575","mem":36,"pub":null,"caterer":"웰스토리","keyman":null,"role":null,"mobile":null,"wh":"분당포도","draft":"칭따오","can":null,"note":"위탁·도매 반영 (웰스토리 / 분당포도)"},{"num":184,"region":"경기권","change":"기존","name":"웰링턴CC","addr":"경기 이천시 모가면 두미리 955","tel":"031-645-1800","mem":27,"pub":null,"caterer":null,"keyman":"윤지민","role":"과장","mobile":"010-9153-8179","wh":"에이스주산","draft":"에비스","can":null,"note":null},{"num":185,"region":"경기권","change":"기존","name":"사우스스프링스 컨트리클럽","addr":"경기 이천시 모가면 소고리 98","tel":"031-630-7000","mem":null,"pub":18,"caterer":"CJ프레시웨이","keyman":"오선교","role":"매니저","mobile":"010-3656-5629","wh":"원천주류","draft":null,"can":null,"note":null},{"num":186,"region":"경기권","change":"기존","name":"BA비스타컨트리클럽","addr":"경기 이천시 모가면 어농로 272","tel":"031-636-3577","mem":36,"pub":9,"caterer":null,"keyman":"김한기","role":"매니저","mobile":"010-5696-1487","wh":"에이스주산","draft":"바이엔","can":null,"note":null},{"num":187,"region":"경기권","change":"신규오픈","name":"이천 지산/신둔 인근 신규 퍼블릭 (설봉/모가권)","addr":"경기 이천시 모가면 일원","tel":"-","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"신규오픈 (이천권 신설 대중제)"},{"num":188,"region":"경기권","change":"상호변경","name":"마이다스레이크 이천GC","addr":"경기 이천시 설성면 설가로 602","tel":"031-640-0123","mem":null,"pub":27,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"상호변경 (구 이천 마이다스골프&리조트, 2022.01)"},{"num":189,"region":"경기권","change":"기존","name":"이천실크밸리골프클럽","addr":"경기 이천시 율면 월포리 1781","tel":"031-639-0077","mem":null,"pub":27,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":190,"region":"경기권","change":"기존","name":"블랙스톤이천GC","addr":"경기 이천시 장호원읍 장여로 459-160","tel":"031-643-2000","mem":18,"pub":9,"caterer":"직영","keyman":"이동구","role":"대리","mobile":"010-4556-9382","wh":"에이스주산","draft":"스텔라","can":null,"note":null},{"num":191,"region":"경기권","change":"기존","name":"비승대체력단련장","addr":"경기 이천시 진상미로 1700-29","tel":"031-634-5527","mem":null,"pub":null,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":192,"region":"경기권","change":"기존","name":"H1 (구.덕평 CC)","addr":"경기 이천시 호법면 장자터로 115","tel":"031-640-8114","mem":18,"pub":null,"caterer":null,"keyman":"고숙현","role":"식음팀장","mobile":"010-4991-1094","wh":"에이스주산","draft":null,"can":null,"note":null},{"num":193,"region":"경기권","change":"위탁·도매갱신","name":"더크로스비 골프클럽","addr":"경기 이천시 호법면 중부대로798번길 177","tel":"031-730-8600","mem":null,"pub":27,"caterer":"SS클럽","keyman":"김병욱","role":null,"mobile":"010-6434-9051","wh":"대정","draft":null,"can":null,"note":"위탁·도매 반영 (SS클럽 / 대정)"},{"num":194,"region":"경기권","change":"기존","name":"서원밸리컨트리클럽","addr":"경기 파주시 광탄면 서원길 333","tel":"031-940-9400","mem":null,"pub":27,"caterer":"직영","keyman":"유성종","role":"식음팀장","mobile":"010-6370-3744","wh":"일오종합","draft":null,"can":null,"note":null},{"num":195,"region":"경기권","change":"기존","name":"서원힐스컨트리클럽","addr":"경기 파주시 광탄면 서원길 333","tel":"031-940-9400","mem":null,"pub":18,"caterer":"직영","keyman":"이종원","role":"지배인","mobile":null,"wh":"일오종합","draft":null,"can":null,"note":null},{"num":196,"region":"경기권","change":"기존","name":"노스팜컨트리클럽","addr":"경기 파주시 광탄면 쇠장이길 265","tel":"031-950-6900","mem":null,"pub":18,"caterer":"CJ프레시웨이","keyman":"한상균","role":"부지배인","mobile":"010-9387-8793","wh":"원천주류","draft":null,"can":null,"note":null},{"num":197,"region":"경기권","change":"기존","name":"베스트밸리골프클럽","addr":"경기 파주시 광탄면 장지산로200번길 32-41","tel":"031-950-7777","mem":null,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":198,"region":"경기권","change":"기존","name":"서서울컨트리클럽","addr":"경기 파주시 광탄면 혜음로 324","tel":"031-943-0040","mem":18,"pub":null,"caterer":"직영","keyman":"김태규","role":"부매니저","mobile":"010-5559-0155","wh":"에이스주산","draft":null,"can":null,"note":null},{"num":199,"region":"경기권","change":"기존","name":"파주리조트골프클럽","addr":"경기 파주시 교하로 1097-33","tel":"031-945-3767","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":200,"region":"경기권","change":"위탁·도매갱신","name":"스마트 KU골프파빌리온","addr":"경기 파주시 법원읍 보광로 1616","tel":"031-930-1600","mem":null,"pub":18,"caterer":"CJ프레시웨이","keyman":null,"role":null,"mobile":null,"wh":"원천종합","draft":null,"can":null,"note":"위탁·도매 반영 (CJ프레시웨이 / 원천종합)"},{"num":201,"region":"경기권","change":"기존","name":"타이거컨트리클럽","addr":"경기 파주시 법원읍 웅담리 462","tel":"031-958-8900","mem":null,"pub":18,"caterer":"CJ프레시웨이","keyman":null,"role":null,"mobile":null,"wh":"원천주류","draft":null,"can":null,"note":null},{"num":202,"region":"경기권","change":"기존","name":"파주CC","addr":"경기 파주시 법원읍 화합로 306","tel":"031-959-9999","mem":null,"pub":18,"caterer":"신라레저","keyman":"정혜영","role":"식음팀장","mobile":"010-6236-1707","wh":null,"draft":"에딩거","can":null,"note":null},{"num":203,"region":"경기권","change":"기존","name":"파인빌골프클럽","addr":"경기 파주시 탄현면 새오리로 250","tel":"031-945-0782","mem":null,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":204,"region":"경기권","change":"기존","name":"평택체력단련장","addr":"경기 평택시 포승읍 원정리 1280","tel":"031-683-4664","mem":null,"pub":null,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":205,"region":"경기권","change":"기존","name":"서평택골프클럽","addr":"경기 평택시 포승읍 포승향남로 218-10","tel":"031-681-0077","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":206,"region":"경기권","change":"기존","name":"푸른솔포천골프클럽","addr":"경기 포천시 가산면 마전리 17-37","tel":"031-850-3000","mem":null,"pub":27,"caterer":"세종외식","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":207,"region":"경기권","change":"위탁·도매갱신","name":"포천힐스컨트리클럽","addr":"경기 포천시 군내면 상성북리 34-4","tel":"031-538-7000","mem":null,"pub":27,"caterer":"웰스토리","keyman":null,"role":null,"mobile":null,"wh":"분당포도","draft":null,"can":null,"note":"위탁·도매 반영 (웰스토리 / 분당포도)"},{"num":208,"region":"경기권","change":"기존","name":"샴발라컨트리클럽","addr":"경기 포천시 군내면 직두리 산 4-15","tel":"031-538-0500","mem":null,"pub":null,"caterer":null,"keyman":"채형열","role":"점장","mobile":"010-2330-7993","wh":null,"draft":null,"can":null,"note":null},{"num":209,"region":"경기권","change":"기존","name":"참밸리컨트리클럽","addr":"경기 포천시 삼육사로 1982","tel":"031-538-0333","mem":null,"pub":null,"caterer":"세종외식","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":210,"region":"경기권","change":"위탁·도매갱신","name":"포천 아도니스컨트리클럽","addr":"경기 포천시 신북면 포천로 2499","tel":"031-530-9100","mem":27,"pub":9,"caterer":"CJ프레시웨이","keyman":"이주형","role":"지배인","mobile":"010-4556-2756","wh":"원천종합","draft":null,"can":null,"note":"위탁·도매 반영 (CJ프레시웨이 / 원천종합)"},{"num":211,"region":"경기권","change":"기존","name":"대유몽베르컨트리클럽","addr":"경기 포천시 영북면 산정리 산 100","tel":"031-531-1100","mem":36,"pub":null,"caterer":"직영","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":212,"region":"경기권","change":"신규오픈","name":"포천 힐마루CC","addr":"경기 포천시 영중면 금주리 일원","tel":"031-530-9000","mem":null,"pub":45,"caterer":"웰스토리","keyman":null,"role":null,"mobile":null,"wh":"분당포도","draft":null,"can":null,"note":"신규오픈 (2023~2024년 순차 개장 / 포천 최대 45홀 규모) | 위탁·도매 반영 (웰스토리 / 분당포도)"},{"num":213,"region":"경기권","change":"기존","name":"라싸골프클럽","addr":"경기 포천시 이동면 제비울2길 161","tel":"031-538-0600","mem":null,"pub":27,"caterer":"신세계푸드","keyman":"주성일","role":null,"mobile":null,"wh":"에이스주산,원천주류","draft":"제주","can":null,"note":null},{"num":214,"region":"경기권","change":"기존","name":"필로스컨트리클럽","addr":"경기 포천시 일동면 운악청계로 1507","tel":"031-539-8900","mem":null,"pub":27,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":"에이스,임성상사","draft":"바이엔","can":null,"note":null},{"num":215,"region":"경기권","change":"기존","name":"락가든골프클럽","addr":"경기 포천시 일동면 유동리 15-1","tel":"031-539-5932","mem":null,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":216,"region":"경기권","change":"기존","name":"일동레이크골프클럽","addr":"경기 포천시 일동면 화동로 738","tel":"031-539-5900","mem":18,"pub":null,"caterer":"농심","keyman":"김봉진","role":"식음팀장","mobile":"010-4843-6525","wh":null,"draft":null,"can":null,"note":null},{"num":217,"region":"경기권","change":"기존","name":"베어크리크골프클럽","addr":"경기 포천시 화현면 달인동로 35","tel":"031-539-5700","mem":null,"pub":36,"caterer":"신세계푸드","keyman":"배현명","role":"점장","mobile":"010-6258-1698","wh":"원천주류","draft":"하이네켄","can":null,"note":null},{"num":218,"region":"경기권","change":"기존","name":"포레스트힐 컨트리클럽","addr":"경기 포천시 화현면 봉화로 253","tel":"031-530-8000","mem":null,"pub":24,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":219,"region":"경기권","change":"기존","name":"캐슬렉스 서울골프클럽","addr":"경기 하남시 감이로 317","tel":"02-480-5600","mem":18,"pub":null,"caterer":"아워홈","keyman":"김형율","role":"지배인","mobile":"010-3177-2829","wh":null,"draft":null,"can":null,"note":null},{"num":220,"region":"경기권","change":"기존","name":"화성골프클럽","addr":"경기 화성시 남양읍 화성로 1393-27","tel":"031-369-8900","mem":null,"pub":9,"caterer":null,"keyman":"박지연","role":"지배인","mobile":"010-3105-7477","wh":null,"draft":null,"can":null,"note":null},{"num":221,"region":"경기권","change":"신규오픈","name":"플라밍고CC","addr":"경기 화성시 송산면 독지리 산 63","tel":"031-366-9900","mem":null,"pub":36,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"신규오픈 (2022년 개장 / 화성 송산그린시티 인근 36홀)"},{"num":222,"region":"경기권","change":"기존","name":"라비돌리조트컨트리클럽","addr":"경기 화성시 정남면 세자로 286","tel":"031-352-7150","mem":null,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":223,"region":"경기권","change":"기존","name":"리베라컨트리클럽","addr":"경기 화성시 중리길 183","tel":"031-8047-8000","mem":36,"pub":null,"caterer":"신안","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":224,"region":"경기권","change":"기존","name":"발리오스컨트리클럽","addr":"경기 화성시 팔탄면 3.1만세로 641-28","tel":"031-352-5061","mem":null,"pub":27,"caterer":null,"keyman":"최인애","role":"과장","mobile":"010-3674-2869","wh":null,"draft":null,"can":null,"note":null},{"num":225,"region":"경기권","change":"기존","name":"기흥컨트리클럽","addr":"경기 화성시 풀무골로106번길 244","tel":"031-376-4001","mem":36,"pub":null,"caterer":"직영","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":226,"region":"경기권","change":"위탁·도매갱신","name":"화성상록골프클럽","addr":"경기 화성시 풀무골로60번길 80","tel":"031-371-0100","mem":null,"pub":27,"caterer":"아워홈","keyman":null,"role":null,"mobile":null,"wh":"중앙종합/수원세계","draft":null,"can":null,"note":"위탁·도매 반영 (아워홈 / 중앙종합/수원세계)"},{"num":227,"region":"경기권","change":"기존","name":"남수원체력단련장","addr":"경기 화성시 황계남길 21-10","tel":"031-229-9200","mem":18,"pub":null,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":228,"region":"충청권","change":"기존","name":"한미르대덕CC","addr":"대전 유성구 테크노중앙로 210","tel":"042-671-2900","mem":null,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":229,"region":"충청권","change":"기존","name":"유성컨트리클럽","addr":"대전 유성구 현충원로 200","tel":"042-822-7103","mem":18,"pub":null,"caterer":null,"keyman":"박병진","role":"과장","mobile":"010-6390-6380","wh":null,"draft":null,"can":null,"note":null},{"num":230,"region":"서울","change":"기존","name":"인서울27골프클럽","addr":"서울 강서구 오정로 443-198","tel":"02-6395-8000","mem":null,"pub":27,"caterer":null,"keyman":"김민숙","role":"지배인","mobile":"010-2987-3297","wh":null,"draft":null,"can":null,"note":null},{"num":231,"region":"충청권","change":"기존","name":"레이캐슬골프앤리조트","addr":"세종 전의면 달전리 738","tel":"1577-3113","mem":null,"pub":27,"caterer":null,"keyman":"이정훈","role":"매니저","mobile":"010-8234-4367","wh":null,"draft":"칭따오","can":null,"note":null},{"num":232,"region":"충청권","change":"기존","name":"세종에머슨컨트리클럽","addr":"세종특별자치시 전의면 운주산로 1510","tel":"044-862-4004","mem":27,"pub":null,"caterer":"직영","keyman":"이호동","role":"차장","mobile":"010-5436-3603","wh":null,"draft":"스텔라","can":null,"note":null},{"num":233,"region":"충청권","change":"기존","name":"세종필드골프클럽","addr":"세종특별자치시 정안세종로 1569","tel":"044-861-5678","mem":null,"pub":18,"caterer":"CJ프레시웨이","keyman":"이상욱","role":"점장","mobile":"010-8802-8582","wh":"아성상사","draft":"칭따오","can":null,"note":null},{"num":234,"region":"인천권","change":"신규오픈","name":"강화 웰니스/석모도 인근 신규 퍼블릭","addr":"인천 강화군 길상면 일원","tel":"-","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"신규오픈 (인천 강화권 신규 대중제)"},{"num":235,"region":"인천권","change":"기존","name":"유니아일랜드 골프&스파 리조트","addr":"인천 강화군 삼산면 어류정길177번길 15","tel":"032-933-9330","mem":null,"pub":18,"caterer":"직영","keyman":"김세영","role":"지배인","mobile":"010-4534-2489","wh":null,"draft":"스텔라","can":null,"note":null},{"num":236,"region":"인천권","change":"위탁·도매갱신","name":"드림파크컨트리클럽","addr":"인천 서구 거월로 61","tel":"032-560-1700","mem":null,"pub":18,"caterer":"아워홈","keyman":null,"role":null,"mobile":null,"wh":"중앙종합/수원세계","draft":null,"can":null,"note":"위탁·도매 반영 (아워홈 / 중앙종합/수원세계)"},{"num":237,"region":"인천권","change":"기존","name":"인천국제컨트리클럽","addr":"인천 서구 도요지로 37","tel":"032-562-6666","mem":18,"pub":null,"caterer":null,"keyman":"강희창","role":"지배인","mobile":"010-9328-5488","wh":null,"draft":null,"can":null,"note":null},{"num":238,"region":"인천권","change":"기존","name":"인천그랜드컨트리클럽","addr":"인천 서구 원석로 195","tel":"032-584-3111","mem":null,"pub":18,"caterer":"워커힐","keyman":null,"role":null,"mobile":null,"wh":"원천주류","draft":"어메이징","can":null,"note":null},{"num":239,"region":"인천권","change":"위탁·도매갱신","name":"베어즈베스트 청라골프클럽","addr":"인천 서구 청라동 9-90","tel":"032-560-2000","mem":null,"pub":27,"caterer":"CJ프레시웨이","keyman":"오인서","role":"캡틴","mobile":"010-5244-1018","wh":"원천종합","draft":null,"can":null,"note":"위탁·도매 반영 (CJ프레시웨이 / 원천종합)"},{"num":240,"region":"인천권","change":"기존","name":"송도골프클럽 퍼블릭","addr":"인천 연수구 능허대로 236","tel":"032-833-0500","mem":null,"pub":9,"caterer":"직영","keyman":"이태영","role":"차장","mobile":"010-4113-7550","wh":null,"draft":null,"can":null,"note":null},{"num":241,"region":"인천권","change":"오픈예정","name":"송도 잭니클라우스 인접/인천신항 배후 신규CC (오픈예정)","addr":"인천 연수구 송도동 일원","tel":"-","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"오픈예정 (인천 송도/연수권 신규 골프장 조성)"},{"num":242,"region":"인천권","change":"기존","name":"잭니클라우스 골프클럽코리아","addr":"인천 연수구 아카데미로 209","tel":"032-850-8000","mem":18,"pub":null,"caterer":"직영","keyman":"김주성","role":"차장","mobile":"010-3743-7926","wh":"에이스주산","draft":null,"can":null,"note":null},{"num":243,"region":"인천권","change":"기존","name":"오렌지듄스 골프클럽","addr":"인천 연수구 인천신항대로 1120","tel":"032-830-8888","mem":null,"pub":18,"caterer":"웰스토리","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":244,"region":"인천권","change":"상호변경","name":"클럽72 골프&리조트","addr":"인천 중구 공항동로 392","tel":"1544-7272","mem":null,"pub":72,"caterer":"네스트호텔","keyman":"류재갑","role":"지배인","mobile":"010-8796-2839","wh":"원천주류","draft":null,"can":null,"note":"상호/운영사 변경 (구 스카이72골프앤리조트, 2023.04)"},{"num":245,"region":"인천권","change":"위탁·도매갱신","name":"골프존카운티 송도 (구 오렌지듄스 영종)","addr":"인천 중구 영종해안남로321번길 184","tel":"032-745-3000","mem":18,"pub":null,"caterer":"웰스토리","keyman":null,"role":null,"mobile":null,"wh":"분당포도","draft":null,"can":null,"note":"위탁·도매 반영 (웰스토리 / 분당포도)"},{"num":246,"region":"인천권","change":"신규오픈","name":"베르힐 영종 (한상드림아일랜드CC)","addr":"인천 중구 중산동 일원 (영종 한상드림아일랜드)","tel":"032-745-8000","mem":null,"pub":36,"caterer":"웰스토리","keyman":null,"role":null,"mobile":null,"wh":"분당포도","draft":null,"can":null,"note":"신규오픈 (영종도 한상드림아일랜드 내 36홀 골프장) | 위탁·도매 반영 (웰스토리 / 분당포도)"},{"num":247,"region":"충청권","change":"기존","name":"계룡대 컨트리클럽","addr":"충남 계룡시 신도안면 남선리 1130","tel":"000-000-0000","mem":36,"pub":null,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":248,"region":"충청권","change":"기존","name":"프린세스골프클럽","addr":"충남 공주시 정안면 방자들길 81-50","tel":"041-851-6300","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":249,"region":"충청권","change":"기존","name":"에딘버러컨트리클럽","addr":"충남 금산군 진산면 행정리 산 473-5","tel":"041-750-0114","mem":18,"pub":null,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":250,"region":"충청권","change":"기존","name":"더힐컨트리클럽","addr":"충남 논산시 상월면 선비로 1079","tel":"041-736-2580","mem":null,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":251,"region":"충청권","change":"기존","name":"파인스톤컨트리클럽","addr":"충남 당진시 송산면 무수들길 90","tel":"041-350-0100","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":252,"region":"충청권","change":"기존","name":"롯데스카이힐 부여 컨트리클럽","addr":"충남 부여군 규암면 백제문로 470","tel":"041-939-1700","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":253,"region":"충청권","change":"기존","name":"백제컨트리클럽","addr":"충남 부여군 은산면 충절로 3734-82","tel":"041-830-0700","mem":null,"pub":27,"caterer":"웰스토리","keyman":"정영서","role":null,"mobile":"010-5800-4652","wh":null,"draft":null,"can":null,"note":null},{"num":254,"region":"충청권","change":"기존","name":"서산수컨트리클럽","addr":"충남 서산시 대산읍 삼길포7로 6","tel":"041-689-7700","mem":null,"pub":18,"caterer":"웰스토리","keyman":"유종선","role":"점장","mobile":"010-9349-0000","wh":"포도분당","draft":"칼스버그","can":null,"note":null},{"num":255,"region":"충청권","change":"기존","name":"도고칸트리구락부","addr":"충남 아산시 선장면 삼봉산길 188","tel":"041-542-4411","mem":18,"pub":null,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":256,"region":"충청권","change":"위탁·도매갱신","name":"SG아름다운골프앤리조트","addr":"충남 아산시 영인면 영인산로 440","tel":"041-536-8000","mem":18,"pub":9,"caterer":"CJ프레시웨이","keyman":"강백균","role":"과장","mobile":"010-5438-2743","wh":"원천종합","draft":null,"can":null,"note":"위탁·도매 반영 (CJ프레시웨이 / 원천종합)"},{"num":257,"region":"충청권","change":"기존","name":"나인스타컨트리클럽","addr":"충남 아산시 음봉면 동천리 132-1","tel":"041-549-6633","mem":null,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":258,"region":"충청권","change":"기존","name":"우정힐스컨트리클럽","addr":"충남 천안시 동남구 목천읍 충절로 1048-68","tel":"041-559-6660","mem":18,"pub":null,"caterer":"그린나래","keyman":"김지환","role":"과장","mobile":"010-4136-5853","wh":"우리주류","draft":"삿포로","can":null,"note":null},{"num":259,"region":"충청권","change":"기존","name":"버드우드골프클럽","addr":"충남 천안시 동남구 병천면 매성2길 103","tel":"041-558-9900","mem":18,"pub":null,"caterer":"신세계푸드","keyman":"장평호","role":"점장","mobile":"010-3684-2389","wh":"아성상사","draft":"스텔라","can":null,"note":null},{"num":260,"region":"충청권","change":"기존","name":"마론뉴데이컨트리클럽","addr":"충남 천안시 동남구 북면 납안5길 74","tel":"041-623-5555","mem":18,"pub":null,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":261,"region":"충청권","change":"위탁·도매갱신","name":"천안상록컨트리클럽","addr":"충남 천안시 동남구 수신면 수신로 557","tel":"041-560-9100","mem":null,"pub":27,"caterer":"CJ프레시웨이","keyman":"유광호","role":"팀장","mobile":"010-9437-4236","wh":"원천종합","draft":null,"can":null,"note":"위탁·도매 반영 (CJ프레시웨이 / 원천종합)"},{"num":262,"region":"충청권","change":"신규오픈","name":"천안 에딘버러/성거 인근 신규CC","addr":"충남 천안시 서북구 입장면 일원","tel":"-","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"신규오픈 (천안 북부권 신설 대중제)"},{"num":263,"region":"충청권","change":"기존","name":"태안비치컨트리클럽","addr":"충남 태안군 근흥면 갈음이길 77","tel":"041-470-7111","mem":18,"pub":null,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":264,"region":"충청권","change":"기존","name":"골든베이골프&리조트","addr":"충남 태안군 근흥면 정산포로 217","tel":"041-671-8000","mem":18,"pub":9,"caterer":"한화 호텔&리조트","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":265,"region":"충청권","change":"기존","name":"로얄링스CC","addr":"충남 태안군 태안읍 기업도시6길 43","tel":"041-670-0300","mem":null,"pub":36,"caterer":null,"keyman":"이솔","role":"매니저","mobile":"010-8712-9943","wh":null,"draft":null,"can":null,"note":null},{"num":266,"region":"충청권","change":"신규오픈","name":"로제비앙GC (구 현대더링스 일부 재편/신규)","addr":"충남 태안군 태안읍 기업도시로 500","tel":"041-671-8000","mem":null,"pub":36,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"신규오픈/리뉴얼 (태안 기업도시 내 36홀 규모)"},{"num":267,"region":"충청권","change":"오픈예정","name":"태안 솔라고/기업도시 신규 36홀 (오픈예정)","addr":"충남 태안군 태안읍 반곡리 일원","tel":"-","mem":null,"pub":36,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"오픈예정 (태안 기업도시 추가 골프장 조성)"},{"num":268,"region":"충청권","change":"기존","name":"솔라고컨트리클럽","addr":"충남 태안군 태안읍 송암리 1532-3","tel":"041-670-8888","mem":null,"pub":36,"caterer":null,"keyman":"김춘수","role":"지배인","mobile":"010-8694-1253","wh":null,"draft":null,"can":null,"note":null},{"num":269,"region":"충청권","change":"기존","name":"대호단양컨트리클럽","addr":"충북 단양군 매포읍 고양5길 43","tel":"043-420-7100","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":270,"region":"충청권","change":"기존","name":"클럽디 보은","addr":"충북 보은군 보은읍 중초리 산 7-1","tel":"043-540-8888","mem":18,"pub":null,"caterer":"웰스토리","keyman":"장인수","role":null,"mobile":"010-2894-7194","wh":null,"draft":null,"can":null,"note":null},{"num":271,"region":"충청권","change":"기존","name":"클럽디 속리산","addr":"충북 보은군 탄부면 평각상장로 230","tel":"043-540-8000","mem":null,"pub":18,"caterer":"웰스토리","keyman":"임경민","role":null,"mobile":"010-4916-1328","wh":null,"draft":null,"can":null,"note":null},{"num":272,"region":"충청권","change":"신규오픈","name":"이지스카이/보은·옥천권 신규 퍼블릭","addr":"충북 옥천군 이원면 일원","tel":"-","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"신규오픈 (충북 남부권 신설 대중제)"},{"num":273,"region":"충청권","change":"신규오픈","name":"감곡CC","addr":"충북 음성군 감곡면 주천로 231","tel":"043-879-7000","mem":null,"pub":18,"caterer":"웰스토리","keyman":null,"role":null,"mobile":null,"wh":"분당포도","draft":null,"can":null,"note":"신규오픈 (충북 음성/장호원 인접 대중제 18홀) | 위탁·도매 반영 (웰스토리 / 분당포도)"},{"num":274,"region":"충청권","change":"신규오픈","name":"백야CC","addr":"충북 음성군 금왕읍 백야로 450","tel":"043-883-9000","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"신규오픈 (충북 음성 금왕권 대중제 18홀)"},{"num":275,"region":"충청권","change":"위탁·도매갱신","name":"진양밸리골프클럽","addr":"충북 음성군 삼성면 금일로 1195","tel":"043-880-8000","mem":27,"pub":null,"caterer":"아워홈","keyman":null,"role":null,"mobile":null,"wh":"중앙종합/수원세계","draft":null,"can":null,"note":"위탁·도매 반영 (아워홈 / 중앙종합/수원세계)"},{"num":276,"region":"충청권","change":"기존","name":"젠스필드컨트리클럽","addr":"충북 음성군 삼성면 덕호로 382","tel":"043-880-1000","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":"어메이징","can":null,"note":null},{"num":277,"region":"충청권","change":"기존","name":"썬밸리컨트리클럽","addr":"충북 음성군 삼성면 범말길 49","tel":"043-881-5307","mem":18,"pub":null,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":278,"region":"충청권","change":"기존","name":"레인보우힐스컨트리클럽","addr":"충북 음성군 생극면 차생로 168","tel":"043-879-7950","mem":null,"pub":27,"caterer":"웰스토리","keyman":"배상민","role":null,"mobile":"010-9087-3863","wh":"포도분당","draft":null,"can":null,"note":null},{"num":279,"region":"충청권","change":"상호변경","name":"모나크CC","addr":"충북 음성군 음성읍 동음로 318","tel":"043-870-1000","mem":null,"pub":27,"caterer":"웰스토리","keyman":null,"role":null,"mobile":null,"wh":"분당포도","draft":null,"can":null,"note":"상호변경 (구 코스카컨트리클럽, 2023년 / 충북 음성) | 위탁·도매 반영 (웰스토리 / 분당포도)"},{"num":280,"region":"충청권","change":"위탁·도매갱신","name":"킹즈락CC","addr":"충북 제천시 내토로7길 136","tel":"043-640-9000","mem":null,"pub":27,"caterer":"SS클럽","keyman":"김준수","role":null,"mobile":"010-3076-6143","wh":"대정","draft":"하이네켄","can":null,"note":"위탁·도매 반영 (SS클럽 / 대정)"},{"num":281,"region":"충청권","change":"기존","name":"에콜리안 제천 컨트리클럽","addr":"충북 제천시 송학주천로 102","tel":"043-642-9474","mem":null,"pub":9,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":282,"region":"충청권","change":"상호변경","name":"아난티 중앙골프클럽","addr":"충북 진천군 백곡면 배티로 818-105","tel":"043-533-6666","mem":27,"pub":null,"caterer":"웰스토리","keyman":"윤재혁","role":"점장","mobile":"010-5586-0415","wh":"포도분당","draft":"부드바르","can":null,"note":"상호변경 (구 에머슨골프클럽, 2022.01)"},{"num":283,"region":"충청권","change":"기존","name":"히든밸리골프클럽","addr":"충북 진천군 백곡면 소토골길 61","tel":"043-539-7900","mem":null,"pub":27,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":284,"region":"충청권","change":"기존","name":"천룡컨트리클럽","addr":"충북 진천군 이월면 진안로 347-123","tel":"043-536-1001","mem":27,"pub":9,"caterer":"직영","keyman":"최철","role":"차장","mobile":null,"wh":"에이스주산","draft":"바이엔","can":null,"note":null},{"num":285,"region":"충청권","change":"기존","name":"골프존카운티 진천","addr":"충북 진천군 진천읍 송강로 783-51","tel":"043-531-3000","mem":27,"pub":null,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":286,"region":"충청권","change":"기존","name":"이븐데일 골프앤리조트","addr":"충북 청주시 상당구 미원면 대신2길 31","tel":"043-288-1000","mem":18,"pub":null,"caterer":null,"keyman":"김채동","role":"팀장","mobile":"010-7174-4423","wh":null,"draft":null,"can":null,"note":null},{"num":287,"region":"충청권","change":"상호변경","name":"세레니티컨트리클럽","addr":"충북 청주시 서원구 남이면 문곡구절골길 235","tel":"043-277-5000","mem":18,"pub":null,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"상호변경 (구 실크리버컨트리클럽, 2022.03)"},{"num":288,"region":"충청권","change":"오픈예정","name":"청주 오창/내수 신규CC (오픈예정)","addr":"충북 청주시 청원구 내수읍 일원","tel":"-","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"오픈예정 (청주권 신규 대중제 조성 사업)"},{"num":289,"region":"충청권","change":"기존","name":"그랜드컨트리클럽","addr":"충북 청주시 청원구 오창읍 꽃화산길 51-20","tel":"043-212-7111","mem":27,"pub":null,"caterer":"신세계푸드","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":290,"region":"충청권","change":"기존","name":"떼제베CC","addr":"충북 청주시 흥덕구 옥산면 동림2길 149","tel":"0507-1329-4381","mem":27,"pub":null,"caterer":null,"keyman":"이재훈","role":"지배인","mobile":"010-3584-2203","wh":null,"draft":null,"can":null,"note":null},{"num":291,"region":"충청권","change":"기존","name":"임페리얼레이크컨트리클럽","addr":"충북 충주시 금가면 다래울길 52","tel":"043-853-5555","mem":18,"pub":null,"caterer":null,"keyman":"권상수","role":"팀장","mobile":"010-4127-7482","wh":null,"draft":null,"can":null,"note":null},{"num":292,"region":"충청권","change":"위탁·도매갱신","name":"동촌골프클럽","addr":"충북 충주시 노은면 문성리 산 14-1","tel":"043-722-0707","mem":18,"pub":null,"caterer":"CJ프레시웨이","keyman":"문승기","role":"점장","mobile":"010-4857-2917","wh":"원천종합","draft":null,"can":null,"note":"위탁·도매 반영 (CJ프레시웨이 / 원천종합)"},{"num":293,"region":"충청권","change":"위탁·도매갱신","name":"금강센테리움컨트리클럽","addr":"충북 충주시 노은면 신효리 산 81-22","tel":"043-849-7000","mem":null,"pub":27,"caterer":"CJ프레시웨이","keyman":"고원규","role":"지배인","mobile":"010-5368-6192","wh":"원천종합","draft":null,"can":null,"note":"위탁·도매 반영 (CJ프레시웨이 / 원천종합)"},{"num":294,"region":"충청권","change":"기존","name":"대영베이스컨트리클럽","addr":"충북 충주시 대소원면 성종두담길 113","tel":"043-850-8600","mem":null,"pub":18,"caterer":"직영","keyman":"윤여찬","role":"지배인","mobile":"010-3470-3153","wh":null,"draft":"하이네켄","can":null,"note":null},{"num":295,"region":"충청권","change":"기존","name":"대영힐스컨트리클럽","addr":"충북 충주시 대소원면 성종두담길 114","tel":"043-850-8600","mem":null,"pub":27,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":"하이네켄","can":null,"note":null},{"num":296,"region":"충청권","change":"기존","name":"중원골프클럽","addr":"충북 충주시 산척면 인등로 392","tel":"043-849-7921","mem":null,"pub":27,"caterer":"아코스","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":297,"region":"충청권","change":"기존","name":"세일컨트리클럽","addr":"충북 충주시 신니면 문락리 산 29-18","tel":"043-841-6000","mem":null,"pub":18,"caterer":"웰스토리","keyman":"김경훈","role":null,"mobile":"010-2604-5067","wh":null,"draft":null,"can":null,"note":null},{"num":298,"region":"충청권","change":"기존","name":"로얄포레컨트리클럽","addr":"충북 충주시 신니면 화치3길 35","tel":"043-857-5000","mem":18,"pub":null,"caterer":"아워홈","keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":299,"region":"충청권","change":"신규오픈","name":"올데이 골프앤리조트 (임페리얼레이크/로얄포레 계열 신규)","addr":"충북 충주시 앙성면 가곡로 1052","tel":"043-850-7000","mem":null,"pub":27,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":"신규오픈 (충주 앙성권 신규 대중제)"},{"num":300,"region":"충청권","change":"기존","name":"일레븐컨트리클럽","addr":"충북 충주시 앙성면 본평리 산 43-1","tel":"043-880-3500","mem":null,"pub":18,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":301,"region":"충청권","change":"기존","name":"스타컨트리클럽","addr":"충북 충주시 앙성면 상대촌1길 198","tel":"043-724-9000","mem":18,"pub":6,"caterer":null,"keyman":null,"role":null,"mobile":null,"wh":null,"draft":null,"can":null,"note":null},{"num":302,"region":"충청권","change":"기존","name":"시그너스컨트리클럽","addr":"충북 충주시 앙성면 중방곡길 57-44","tel":"043-857-5001","mem":27,"pub":null,"caterer":"CJ프레시웨이","keyman":null,"role":null,"mobile":null,"wh":"원천주류","draft":null,"can":null,"note":null},{"num":303,"region":"충청권","change":"신규추가(위탁)","name":"모카CC","addr":"충북 충주시 일원","tel":"-","mem":null,"pub":18,"caterer":"웰스토리","keyman":null,"role":null,"mobile":null,"wh":"분당포도","draft":null,"can":null,"note":"신규편입 및 위탁·도매 반영 (웰스토리 / 분당포도)"},{"num":304,"region":"충청권","change":"위탁·도매갱신","name":"킹스데일골프클럽","addr":"충북 충주시 주덕읍 기업도시3로 2","tel":"043-870-4100","mem":null,"pub":18,"caterer":"CJ프레시웨이","keyman":"신성현","role":"지배인","mobile":"010-5847-7076","wh":"원천종합","draft":null,"can":null,"note":"위탁·도매 반영 (CJ프레시웨이 / 원천종합)"}];
+</script>
+
+<script>
+const LIVE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxc1R7HXcFZaRurUA9gNqeoePlKaAliEKDcGsKWodGwL2HAzk_eO8N6uuK5OuEyY3TB/exec";
+
+function normalizeCourseItem(item) {
+  const copy = { ...item };
+  if (copy.num !== undefined && copy.num !== null && copy.num !== "") {
+    copy.num = Number(copy.num);
+  }
+  if (copy.mem !== undefined && copy.mem !== null && copy.mem !== "") {
+    const m = Number(copy.mem);
+    copy.mem = Number.isNaN(m) ? null : m;
+  } else {
+    copy.mem = null;
+  }
+  if (copy.pub !== undefined && copy.pub !== null && copy.pub !== "") {
+    const p = Number(copy.pub);
+    copy.pub = Number.isNaN(p) ? null : p;
+  } else {
+    copy.pub = null;
+  }
+
+  if (Array.isArray(copy.keymen) && copy.keymen.length > 0) {
+    copy.keymen = copy.keymen
+      .map(k => ({
+        name: String(k.name || "").trim(),
+        role: String(k.role || "").trim(),
+        mobile: String(k.mobile || "").trim()
+      }))
+      .filter(k => k.name || k.role || k.mobile)
+      .slice(0, 3);
+  } else {
+    const arr = [];
+    const k1Name = copy.keyman1 || copy.keyman;
+    const k1Role = copy.role1 || copy.role;
+    const k1Mobile = copy.mobile1 || copy.mobile;
+    if (k1Name || k1Role || k1Mobile) {
+      arr.push({
+        name: String(k1Name || "").trim(),
+        role: String(k1Role || "").trim(),
+        mobile: String(k1Mobile || "").trim()
+      });
+    }
+    if (copy.keyman2 || copy.role2 || copy.mobile2) {
+      arr.push({
+        name: String(copy.keyman2 || "").trim(),
+        role: String(copy.role2 || "").trim(),
+        mobile: String(copy.mobile2 || "").trim()
+      });
+    }
+    if (copy.keyman3 || copy.role3 || copy.mobile3) {
+      arr.push({
+        name: String(copy.keyman3 || "").trim(),
+        role: String(copy.role3 || "").trim(),
+        mobile: String(copy.mobile3 || "").trim()
+      });
+    }
+    copy.keymen = arr.slice(0, 3);
+  }
+  const first = copy.keymen[0] || { name: null, role: null, mobile: null };
+  copy.keyman = first.name || null;
+  copy.role = first.role || null;
+  copy.mobile = first.mobile || null;
+
+  ["region", "change", "name", "addr", "tel", "caterer", "wh", "draft", "can", "note"].forEach(field => {
+    if (copy[field] !== undefined && copy[field] !== null) {
+      const s = String(copy[field]).trim();
+      copy[field] = s === "" ? null : s;
+    } else {
+      copy[field] = null;
+    }
+  });
+  return copy;
+}
+
+let golfData = DEFAULT_GOLF_DATA.map(normalizeCourseItem);
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
+}
+
+function formatCourseName(item) {
+  return item.caterer ? `${item.name}(${item.caterer})` : item.name;
+}
+
+function formatKeymenSummary(item) {
+  const list = item.keymen || [];
+  if (!list.length) return "";
+  return list
+    .map((k, idx) => {
+      const info = [k.name, k.role, k.mobile].filter(Boolean).join(" ");
+      return list.length > 1 ? `[${idx + 1}] ${info}` : info;
+    })
+    .join(" / ");
+}
+
+function formatNowTime() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, "0");
+  const mm = String(now.getMinutes()).padStart(2, "0");
+  const ss = String(now.getSeconds()).padStart(2, "0");
+  return `${hh}:${mm}:${ss}`;
+}
+
+function setDataSourceBanner(mode, detailMsg) {
+  const bar = document.getElementById("dataStatusBar");
+  const textEl = document.getElementById("dataStatusText");
+  const btn = document.getElementById("syncLiveBtn");
+  if (!bar || !textEl) return;
+
+  bar.classList.remove("loading", "live", "local");
+  bar.classList.add(mode);
+
+  if (mode === "loading") {
+    textEl.innerHTML = `구글시트 실시간 데이터 불러오는 중...`;
+    if (btn) btn.disabled = true;
+  } else if (mode === "live") {
+    textEl.innerHTML = `🟢 실시간 구글시트 로드됨 <span class="status-sub">(${detailMsg || formatNowTime()})</span>`;
+    if (btn) btn.disabled = false;
+  } else {
+    textEl.innerHTML = `🟡 로컬 내장 데이터 표시 중 <span class="status-sub">(${detailMsg || "오프라인/연결 실패"})</span>`;
+    if (btn) btn.disabled = false;
+  }
+}
+
+function fetchViaJsonp(url, timeoutMs = 10000) {
+  return new Promise((resolve, reject) => {
+    const cbName = "__gsheet_cb_" + Date.now() + "_" + Math.floor(Math.random() * 10000);
+    const script = document.createElement("script");
+    let finished = false;
+
+    const cleanup = () => {
+      if (script.parentNode) script.parentNode.removeChild(script);
+      try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+    };
+
+    const timer = setTimeout(() => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      reject(new Error("JSONP 응답 시간 초과"));
+    }, timeoutMs);
+
+    window[cbName] = (data) => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      cleanup();
+      resolve(data);
+    };
+
+    script.onerror = () => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      cleanup();
+      reject(new Error("스크립트 로드 차단/실패"));
+    };
+
+    const sep = url.includes("?") ? "&" : "?";
+    script.src = `${url}${sep}callback=${cbName}&_ts=${Date.now()}`;
+    document.head.appendChild(script);
+  });
+}
+
+async function requestSheetPayload() {
+  const sep = LIVE_SHEET_API_URL.includes("?") ? "&" : "?";
+  const reqUrl = `${LIVE_SHEET_API_URL}${sep}_ts=${Date.now()}`;
+  try {
+    const res = await fetch(reqUrl, {
+      method: "GET",
+      redirect: "follow"
+    });
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+    const text = await res.text();
+    return JSON.parse(text);
+  } catch (fetchErr) {
+    // file:// 환경이나 일부 모바일 WebView에서 fetch가 막힐 경우 JSONP 폴백 시도
+    return await fetchViaJsonp(LIVE_SHEET_API_URL, 10000);
+  }
+}
+
+async function fetchLiveGolfData(isManual = false) {
+  setDataSourceBanner("loading");
+  try {
+    const payload = await requestSheetPayload();
+    const rows = Array.isArray(payload)
+      ? payload
+      : (Array.isArray(payload.data) ? payload.data : (Array.isArray(payload.records) ? payload.records : null));
+
+    if (!rows || rows.length === 0) {
+      throw new Error("응답 데이터가 비어 있음");
+    }
+
+    const validRows = rows
+      .map(normalizeCourseItem)
+      .filter(r => r.name && !Number.isNaN(r.num));
+
+    if (validRows.length === 0) {
+      throw new Error("유효한 골프장 레코드 없음");
+    }
+
+    golfData = validRows;
+    const nowStr = formatNowTime();
+    setDataSourceBanner("live", `${golfData.length}개소 · ${nowStr} 동기화`);
+    renderList();
+    if (state.sheetCourseNum !== null) {
+      openDetailSheet(state.sheetCourseNum);
+    }
+    if (isManual) {
+      showToast(`실시간 구글시트 최신 데이터(${golfData.length}개소)를 반영했습니다.`);
+    }
+  } catch (err) {
+    console.warn("실시간 구글시트 로드 실패, 로컬 데이터로 전환:", err);
+    golfData = DEFAULT_GOLF_DATA.map(normalizeCourseItem);
+    const reason = err && err.message ? err.message : "연결 불가";
+    setDataSourceBanner("local", `내장 ${golfData.length}개소 · ${reason}`);
+    renderList();
+    if (isManual) {
+      showToast(`실시간 연결 실패: ${reason}`);
+    }
+  }
+}
+
+// =========================================================================
+// 시·군·읍·면 좌표 기반 인근 골프장 6곳 및 차량 소요시간 계산
+// =========================================================================
+const LOCALITY_COORDS = {
+  "강릉시": [37.75, 128.88], "고성군": [38.38, 128.47], "동해시": [37.52, 129.11],
+  "삼척시": [37.45, 129.16], "속초시": [38.20, 128.59], "양양군": [38.07, 128.62],
+  "영월군": [37.18, 128.46], "원주시": [37.34, 127.92], "정선군": [37.38, 128.66],
+  "철원군": [38.14, 127.31], "춘천시": [37.88, 127.73], "태백시": [37.16, 128.98],
+  "평창군": [37.37, 128.39], "홍천군": [37.69, 127.88], "횡성군": [37.49, 127.98],
+  "가평군": [37.83, 127.51], "고양시": [37.66, 126.83], "광주시": [37.41, 127.26],
+  "구리시": [37.59, 127.13], "군포시": [37.36, 126.93], "김포시": [37.62, 126.71],
+  "남양주시": [37.63, 127.21], "동두천시": [37.90, 127.06], "성남시": [37.42, 127.12],
+  "수원시": [37.26, 127.03], "시흥시": [37.38, 126.80], "안산시": [37.32, 126.83],
+  "안성시": [37.01, 127.28], "양주시": [37.78, 127.04], "양평군": [37.49, 127.49],
+  "여주시": [37.29, 127.63], "연천군": [38.09, 127.07], "용인시": [37.24, 127.17],
+  "이천시": [37.27, 127.43], "파주시": [37.76, 126.78], "평택시": [36.99, 127.11],
+  "포천시": [37.89, 127.20], "하남시": [37.54, 127.21], "화성시": [37.20, 126.83],
+  "강서구": [37.55, 126.84], "강화군": [37.74, 126.48], "인천 서구": [37.54, 126.67],
+  "연수구": [37.41, 126.67], "인천 중구": [37.47, 126.52],
+  "유성구": [36.36, 127.35], "세종": [36.59, 127.25],
+  "계룡시": [36.27, 127.25], "공주시": [36.45, 127.12], "금산군": [36.10, 127.49],
+  "논산시": [36.18, 127.09], "당진시": [36.89, 126.64], "부여군": [36.27, 126.91],
+  "서산시": [36.78, 126.45], "아산시": [36.79, 127.00], "천안시": [36.81, 127.15],
+  "태안군": [36.74, 126.30], "단양군": [36.98, 128.36], "보은군": [36.48, 127.73],
+  "옥천군": [36.30, 127.57], "음성군": [36.94, 127.69], "제천시": [37.13, 128.21],
+  "진천군": [36.85, 127.44], "청주시": [36.64, 127.49], "충주시": [36.99, 127.92]
+};
+
+const SUB_LOCALITY_COORDS = [
+  { key: "곤지암읍", coords: [37.365, 127.355] },
+  { key: "산북면", coords: [37.395, 127.415] },
+  { key: "도척면", coords: [37.320, 127.310] },
+  { key: "금사면", coords: [37.390, 127.490] },
+  { key: "대신면", coords: [37.365, 127.565] },
+  { key: "북내면", coords: [37.345, 127.665] },
+  { key: "가남읍", coords: [37.215, 127.545] },
+  { key: "점동면", coords: [37.215, 127.665] },
+  { key: "장호원읍", coords: [37.115, 127.625] },
+  { key: "감곡면", coords: [37.105, 127.645] },
+  { key: "일죽면", coords: [37.095, 127.485] },
+  { key: "죽산면", coords: [37.075, 127.425] },
+  { key: "삼성면", coords: [37.015, 127.505] },
+  { key: "설악면", coords: [37.685, 127.485] },
+  { key: "남산면", coords: [37.795, 127.605] },
+  { key: "서면", coords: [37.665, 127.685] },
+  { key: "화도읍", coords: [37.655, 127.315] },
+  { key: "기흥구", coords: [37.275, 127.115] },
+  { key: "처인구", coords: [37.205, 127.245] },
+  { key: "모가면", coords: [37.185, 127.455] },
+  { key: "호법면", coords: [37.225, 127.415] },
+  { key: "지정면", coords: [37.395, 127.845] },
+  { key: "문막읍", coords: [37.315, 127.815] },
+  { key: "부론면", coords: [37.215, 127.755] },
+  { key: "앙성면", coords: [37.145, 127.785] }
+];
+
+const DIRECT_DRIVE_OVERRIDES = {
+  "85-147": 10,
+  "89-147": 11,
+  "85-89": 7,
+  "85-87": 8,
+  "85-88": 9,
+  "190-273": 8,
+  "120-276": 12,
+  "120-277": 13,
+  "71-38": 16,
+  "76-35": 17,
+  "127-29": 18
+};
+
+function getCourseLatLng(course) {
+  const addr = course.addr || "";
+  let base = [37.35, 127.30];
+  for (const [k, coords] of Object.entries(LOCALITY_COORDS)) {
+    if (addr.includes(k)) {
+      base = coords;
+      break;
+    }
+  }
+  for (const sub of SUB_LOCALITY_COORDS) {
+    if (addr.includes(sub.key)) {
+      base = sub.coords;
+      break;
+    }
+  }
+  const jLat = (((course.num * 37) % 19) - 9) * 0.0042;
+  const jLng = (((course.num * 53) % 19) - 9) * 0.0048;
+  return [base[0] + jLat, base[1] + jLng];
+}
+
+function extractCityName(addr) {
+  if (!addr) return "";
+  const m = addr.match(/([가-힣]+(?:시|군|구))/);
+  return m ? m[1] : "";
+}
+
+function estimateDriveMinutes(a, b) {
+  const pairKey = a.num < b.num ? `${a.num}-${b.num}` : `${b.num}-${a.num}`;
+  if (DIRECT_DRIVE_OVERRIDES[pairKey] !== undefined) {
+    return DIRECT_DRIVE_OVERRIDES[pairKey];
+  }
+  const [lat1, lon1] = getCourseLatLng(a);
+  const [lat2, lon2] = getCourseLatLng(b);
+  const dLat = (lat2 - lat1) * 111;
+  const dLon = (lon2 - lon1) * 88.8;
+  const straightKm = Math.sqrt(dLat * dLat + dLon * dLon);
+  const roadKm = straightKm * 1.28 + 1.5;
+  return Math.max(4, Math.round((roadKm / 46) * 60));
+}
+
+function getNearbyCoursesTop6(targetCourse, allCourses) {
+  const list = [];
+  allCourses.forEach(other => {
+    if (other.num === targetCourse.num) return;
+    const mins = estimateDriveMinutes(targetCourse, other);
+    const otherCity = extractCityName(other.addr);
+    list.push({ course: other, mins, otherCity });
+  });
+  list.sort((x, y) => x.mins - y.mins || x.course.num - y.course.num);
+  return list.slice(0, 6);
+}
+
+// =========================================================================
+// 앱 상태 및 필터 동기화
+// =========================================================================
+const state = {
+  region: "ALL",
+  city: "ALL",
+  caterer: "ALL",
+  query: "",
+  sort: "region",
+  highlightedNum: null,
+  sheetCourseNum: null
+};
+
+function syncFilterOptions() {
+  const totalCount = golfData.length;
+  document.getElementById("totalBadge").textContent = `${totalCount}개소`;
+
+  const regionCounts = { ALL: totalCount, "경기권": 0, "강원권": 0, "충청권": 0, "인천권": 0, "서울": 0 };
+  const citySet = new Set();
+  const catererSet = new Set();
+
+  golfData.forEach(d => {
+    if (d.region && regionCounts[d.region] !== undefined) {
+      regionCounts[d.region]++;
+    }
+    if (state.region === "ALL" || d.region === state.region) {
+      const city = extractCityName(d.addr);
+      if (city) citySet.add(city);
+    }
+    if (d.caterer && d.caterer.trim()) {
+      catererSet.add(d.caterer.trim());
+    }
+  });
+
+  document.querySelectorAll("#regionGrid .region-btn").forEach(btn => {
+    const reg = btn.dataset.region;
+    const label = reg === "ALL" ? "전체" : reg;
+    const cnt = regionCounts[reg] ?? 0;
+    btn.innerHTML = `${label} <span class="cnt">(${cnt})</span>`;
+  });
+
+  const citySelect = document.getElementById("cityFilter");
+  const prevCity = state.city;
+  const sortedCities = Array.from(citySet).sort((a, b) => a.localeCompare(b, "ko"));
+  citySelect.innerHTML = `<option value="ALL">시·군 전체</option>`;
+  sortedCities.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c;
+    opt.textContent = c;
+    citySelect.appendChild(opt);
+  });
+  if (prevCity === "ALL" || citySet.has(prevCity)) {
+    citySelect.value = prevCity;
+  } else {
+    state.city = "ALL";
+    citySelect.value = "ALL";
+  }
+
+  const catererSelect = document.getElementById("catererFilter");
+  const prevCat = state.caterer;
+  const sortedCats = Array.from(catererSet).sort((a, b) => a.localeCompare(b, "ko"));
+  catererSelect.innerHTML = `<option value="ALL">위탁사 전체</option><option value="NONE">위탁사 미기재</option>`;
+  sortedCats.forEach(cat => {
+    const opt = document.createElement("option");
+    opt.value = cat;
+    opt.textContent = cat;
+    catererSelect.appendChild(opt);
+  });
+  if (prevCat === "ALL" || prevCat === "NONE" || catererSet.has(prevCat)) {
+    catererSelect.value = prevCat;
+  } else {
+    state.caterer = "ALL";
+    catererSelect.value = "ALL";
+  }
+}
+
+function getFilteredAndSortedCourses() {
+  const q = (state.query || "").trim().toLowerCase();
+  const filtered = golfData.filter(item => {
+    if (state.region !== "ALL" && item.region !== state.region) return false;
+    if (state.city !== "ALL" && extractCityName(item.addr) !== state.city) return false;
+    if (state.caterer === "NONE" && item.caterer) return false;
+    if (state.caterer !== "ALL" && state.caterer !== "NONE" && item.caterer !== state.caterer) return false;
+
+    if (!q) return true;
+    const kmText = (item.keymen || []).map(k => `${k.name || ""} ${k.role || ""} ${k.mobile || ""}`).join(" ");
+    const haystack = [
+      String(item.num || ""),
+      item.name,
+      item.caterer,
+      item.region,
+      item.change,
+      item.addr,
+      item.tel,
+      item.wh,
+      item.draft,
+      item.can,
+      item.note,
+      kmText
+    ].filter(Boolean).join(" ").toLowerCase();
+
+    return haystack.includes(q);
+  });
+
+  const sorted = [...filtered];
+  if (state.sort === "name") {
+    sorted.sort((a, b) => a.name.localeCompare(b.name, "ko"));
+  } else if (state.sort === "num") {
+    sorted.sort((a, b) => (a.num || 0) - (b.num || 0));
+  } else {
+    sorted.sort((a, b) => {
+      const rCmp = (a.region || "").localeCompare(b.region || "", "ko");
+      if (rCmp !== 0) return rCmp;
+      const aCmp = (a.addr || "").localeCompare(b.addr || "", "ko");
+      if (aCmp !== 0) return aCmp;
+      return a.name.localeCompare(b.name, "ko");
+    });
+  }
+  return sorted;
+}
+
+// =========================================================================
+// 메인 리스트 렌더링
+// =========================================================================
+function renderList() {
+  syncFilterOptions();
+  const courses = getFilteredAndSortedCourses();
+  const listEl = document.getElementById("courseList");
+  const regionLabel = state.region === "ALL" ? "전체 권역" : state.region;
+  document.getElementById("resultSummary").innerHTML =
+    `${regionLabel} · 검색 결과 <strong>${courses.length}개소</strong>`;
+
+  listEl.innerHTML = "";
+
+  if (courses.length === 0) {
+    listEl.innerHTML = `
+      <div class="course-card" style="text-align:center; padding:28px 16px;">
+        <div style="font-size:15px; font-weight:800; color:#f8fafc; margin-bottom:6px;">일치하는 골프장이 없습니다</div>
+        <div style="font-size:12.5px; color:#94a3b8;">검색어를 지우거나 권역 버튼을 [전체]로 변경해 보세요.</div>
+      </div>
+    `;
+    return;
+  }
+
+  const frag = document.createDocumentFragment();
+
+  courses.forEach(c => {
+    const card = document.createElement("article");
+    card.className = "course-card" + (c.num === state.highlightedNum ? " highlighted" : "");
+    card.id = `course-card-${c.num}`;
+
+    const holes = [
+      c.mem ? `회원 ${c.mem}H` : null,
+      c.pub ? `대중 ${c.pub}H` : null
+    ].filter(Boolean).join(" / ") || "홀 미기재";
+
+    const beerInfo = [
+      c.draft ? `Draft: ${c.draft}` : null,
+      c.can ? `Can: ${c.can}` : null
+    ].filter(Boolean).join(" · ");
+
+    const keymanSummary = formatKeymenSummary(c);
+    const titleHtml = c.caterer
+      ? `${c.name}<span class="card-caterer">(${c.caterer})</span>`
+      : c.name;
+
+    const nearby6 = getNearbyCoursesTop6(c, golfData);
+    const nearbyHtml = nearby6.map(item => {
+      const nc = item.course;
+      const catLabel = nc.caterer || "미기재";
+      const tCls = item.mins <= 12 ? "t-fast" : (item.mins <= 22 ? "t-mid" : "t-far");
+      return `
+        <button type="button" class="nearby-item" data-jump-num="${nc.num}">
+          <div class="nearby-name-line">${nc.name}<span class="cat">(${catLabel})</span></div>
+          <div class="nearby-meta-line">
+            <span class="nearby-city">${item.otherCity || nc.region}</span>
+            <span class="time-pill ${tCls}">약 ${item.mins}분</span>
+          </div>
+        </button>
+      `;
+    }).join("");
+
+    const telHtml = c.tel && c.tel !== "-" && c.tel !== "000-000-0000"
+      ? `<a href="tel:${c.tel}" class="tel-link" onclick="event.stopPropagation()">${c.tel}</a>`
+      : (c.tel || "-");
+
+    card.innerHTML = `
+      <div class="card-top">
+        <div class="card-title"><span class="card-num">#${c.num}</span>${titleHtml}</div>
+        <button type="button" class="card-detail-btn" data-detail-num="${c.num}">상세·지도</button>
+      </div>
+
+      <div class="badge-row">
+        <span class="tag region">${c.region}</span>
+        <span class="tag">${holes}</span>
+        ${c.change && c.change !== "기존" ? `<span class="tag change">${c.change}</span>` : ""}
+        ${beerInfo ? `<span class="tag beer">${beerInfo}</span>` : ""}
+      </div>
+
+      <div class="info-rows">
+        <div class="info-line"><span class="info-label">주소</span><span class="info-val">${c.addr || "-"}</span></div>
+        <div class="info-line"><span class="info-label">전화</span><span class="info-val">${telHtml}</span></div>
+        ${c.wh ? `<div class="info-line"><span class="info-label">도매장</span><span class="info-val">${c.wh}</span></div>` : ""}
+        ${keymanSummary ? `<div class="info-line"><span class="info-label">키맨(${c.keymen.length})</span><span class="info-val">${keymanSummary}</span></div>` : ""}
+        ${c.note ? `<div class="info-line"><span class="info-label">메모</span><span class="info-val">${c.note}</span></div>` : ""}
+      </div>
+
+      <div class="nearby-box">
+        <div class="nearby-head">
+          <span>📍 인근 골프장 6곳 (차량 이동시간)</span>
+          <span class="sub">터치 시 바로 이동</span>
+        </div>
+        <div class="nearby-grid">${nearbyHtml}</div>
+      </div>
+    `;
+
+    card.addEventListener("click", () => {
+      openDetailSheet(c.num);
+    });
+
+    card.querySelectorAll(".nearby-item").forEach(btn => {
+      btn.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        const targetNum = Number(btn.dataset.jumpNum);
+        jumpToCourse(targetNum);
+      });
+    });
+
+    frag.appendChild(card);
+  });
+
+  listEl.appendChild(frag);
+}
+
+function jumpToCourse(targetNum) {
+  const target = golfData.find(d => d.num === targetNum);
+  if (!target) return;
+
+  state.region = "ALL";
+  state.city = "ALL";
+  state.caterer = "ALL";
+  state.query = "";
+  state.highlightedNum = targetNum;
+
+  document.getElementById("searchInput").value = "";
+  document.getElementById("searchClearBtn").classList.remove("show");
+  document.querySelectorAll("#regionGrid .region-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.region === "ALL");
+  });
+
+  renderList();
+  const el = document.getElementById(`course-card-${targetNum}`);
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  showToast(`#${target.num} ${formatCourseName(target)} 위치로 이동했습니다.`);
+}
+
+// =========================================================================
+// 상세 바텀시트 (지도, 길찾기, 상세정보, 인근 6곳)
+// =========================================================================
+function openDetailSheet(num) {
+  const course = golfData.find(d => d.num === num);
+  if (!course) return;
+  state.sheetCourseNum = num;
+  state.highlightedNum = num;
+
+  document.getElementById("sheetTitle").textContent = `#${course.num} ${formatCourseName(course)}`;
+  const body = document.getElementById("sheetBody");
+
+  const queryForMap = encodeURIComponent(`${course.name} ${course.addr || ""}`.trim());
+  const naverUrl = `https://map.naver.com/p/search/${encodeURIComponent(course.name)}`;
+  const kakaoUrl = `https://map.kakao.com/link/search/${encodeURIComponent(course.name)}`;
+  const embedUrl = `https://maps.google.com/maps?q=${queryForMap}&t=&z=13&ie=UTF8&iwloc=&output=embed`;
+
+  const holes = [
+    course.mem ? `회원제 ${course.mem}홀` : null,
+    course.pub ? `대중제 ${course.pub}홀` : null
+  ].filter(Boolean).join(" / ") || "미기재";
+
+  const keymen = course.keymen || [];
+  const kmHtml = keymen.length
+    ? keymen.map((k, idx) => `
+        <div class="km-card">
+          <div>
+            <span style="color:#38bdf8; font-weight:800; margin-right:6px;">키맨 ${idx + 1}</span>
+            <strong>${k.name || "성명 미기재"}</strong>
+            <span style="color:#94a3b8; margin-left:4px;">${k.role || ""}</span>
+          </div>
+          <div>
+            ${k.mobile ? `<a href="tel:${k.mobile}" class="tel-link">${k.mobile}</a>` : `<span style="color:#64748b;">번호 없음</span>`}
+          </div>
+        </div>
+      `).join("")
+    : `<div style="font-size:12.5px; color:#94a3b8;">등록된 키맨 정보가 없습니다.</div>`;
+
+  const nearby6 = getNearbyCoursesTop6(course, golfData);
+  const nearbyRowsHtml = nearby6.map(item => {
+    const nc = item.course;
+    const cat = nc.caterer || "미기재";
+    const tCls = item.mins <= 12 ? "t-fast" : (item.mins <= 22 ? "t-mid" : "t-far");
+    return `
+      <div class="sheet-nearby-row" data-sheet-jump="${nc.num}">
+        <div style="min-width:0;">
+          <div style="font-size:13px; font-weight:800; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+            ${nc.name} <span style="color:#38bdf8;">(${cat})</span>
+          </div>
+          <div style="font-size:11px; color:#94a3b8; margin-top:2px;">${nc.addr || "-"}</div>
+        </div>
+        <span class="time-pill ${tCls}" style="font-size:11.5px; padding:3px 7px;">약 ${item.mins}분</span>
+      </div>
+    `;
+  }).join("");
+
+  body.innerHTML = `
+    <div class="map-box">
+      <iframe src="${embedUrl}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="${course.name} 지도"></iframe>
+      <div class="map-ext-bar">
+        <span style="color:#cbd5e1; font-weight:600;">내비·지도 앱 열기:</span>
+        <div class="ext-links">
+          <a href="${naverUrl}" target="_blank" rel="noopener noreferrer">네이버지도 ↗</a>
+          <a href="${kakaoUrl}" target="_blank" rel="noopener noreferrer">카카오맵 ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="sheet-section">
+      <h3>기본 및 식음·주류 상세 정보</h3>
+      <div class="kv-list">
+        <div class="k">권역/구분</div><div class="v">${course.region} · ${course.change || "기존"}</div>
+        <div class="k">위탁사</div><div class="v"><strong>${course.caterer || "미기재"}</strong></div>
+        <div class="k">코스규모</div><div class="v">${holes}</div>
+        <div class="k">전화번호</div><div class="v">${course.tel && course.tel !== "-" && course.tel !== "000-000-0000" ? `<a href="tel:${course.tel}" class="tel-link">${course.tel}</a>` : (course.tel || "-")}</div>
+        <div class="k">도매장</div><div class="v">${course.wh || "-"}</div>
+        <div class="k">Draft Beer</div><div class="v">${course.draft || "-"}</div>
+        <div class="k">Can Beer</div><div class="v">${course.can || "-"}</div>
+        <div class="k">주소</div><div class="v">${course.addr || "-"}</div>
+        <div class="k">특이사항</div><div class="v">${course.note || "-"}</div>
+      </div>
+    </div>
+
+    <div class="sheet-section">
+      <h3>담당 키맨 (${keymen.length} / 3명)</h3>
+      ${kmHtml}
+    </div>
+
+    <div class="sheet-section">
+      <h3>인근 골프장 6곳 (차량 소요시간순)</h3>
+      ${nearbyRowsHtml}
+    </div>
+  `;
+
+  body.querySelectorAll(".sheet-nearby-row").forEach(row => {
+    row.addEventListener("click", () => {
+      const nextNum = Number(row.dataset.sheetJump);
+      openDetailSheet(nextNum);
+    });
+  });
+
+  document.getElementById("sheetBackdrop").classList.add("open");
+  const sheet = document.getElementById("detailSheet");
+  sheet.classList.add("open");
+  sheet.setAttribute("aria-hidden", "false");
+  body.scrollTop = 0;
+}
+
+function closeDetailSheet() {
+  document.getElementById("sheetBackdrop").classList.remove("open");
+  const sheet = document.getElementById("detailSheet");
+  sheet.classList.remove("open");
+  sheet.setAttribute("aria-hidden", "true");
+  state.sheetCourseNum = null;
+}
+
+document.getElementById("sheetCloseBtn").onclick = closeDetailSheet;
+document.getElementById("sheetBackdrop").onclick = closeDetailSheet;
+
+// =========================================================================
+// 검색창, 권역 버튼, 세부 필터, 스크롤 이벤트 바인딩
+// =========================================================================
+const searchInputEl = document.getElementById("searchInput");
+const searchClearBtn = document.getElementById("searchClearBtn");
+
+searchInputEl.addEventListener("input", () => {
+  state.query = searchInputEl.value;
+  searchClearBtn.classList.toggle("show", state.query.length > 0);
+  renderList();
+});
+
+searchClearBtn.addEventListener("click", () => {
+  searchInputEl.value = "";
+  state.query = "";
+  searchClearBtn.classList.remove("show");
+  renderList();
+  searchInputEl.focus();
+});
+
+document.querySelectorAll("#regionGrid .region-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("#regionGrid .region-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    state.region = btn.dataset.region;
+    state.city = "ALL";
+    renderList();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+});
+
+document.getElementById("cityFilter").addEventListener("change", e => {
+  state.city = e.target.value;
+  renderList();
+});
+
+document.getElementById("catererFilter").addEventListener("change", e => {
+  state.caterer = e.target.value;
+  renderList();
+});
+
+document.querySelectorAll(".sort-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".sort-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    state.sort = btn.dataset.sort;
+    renderList();
+  });
+});
+
+document.getElementById("resetFilterBtn").addEventListener("click", () => {
+  state.region = "ALL";
+  state.city = "ALL";
+  state.caterer = "ALL";
+  state.query = "";
+  state.sort = "region";
+  state.highlightedNum = null;
+  searchInputEl.value = "";
+  searchClearBtn.classList.remove("show");
+  document.querySelectorAll("#regionGrid .region-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.region === "ALL");
+  });
+  document.querySelectorAll(".sort-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.sort === "region");
+  });
+  renderList();
+  showToast("검색 및 권역 필터가 초기화되었습니다.");
+});
+
+const scrollTopBtn = document.getElementById("scrollTopBtn");
+window.addEventListener("scroll", () => {
+  scrollTopBtn.classList.toggle("show", window.scrollY > 360);
+}, { passive: true });
+scrollTopBtn.addEventListener("click", () => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
+document.getElementById("syncLiveBtn").addEventListener("click", () => {
+  fetchLiveGolfData(true);
+});
+
+renderList();
+fetchLiveGolfData(false);
+</script>
+</body>
+</html>
