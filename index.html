@@ -1,0 +1,1824 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f172a">
+<title>중부·강원권 골프장 실시간 모바일 디렉토리 (읽기 전용)</title>
+<style>
+  :root {
+    --bg: #0b1120;
+    --header-bg: rgba(15, 23, 42, 0.96);
+    --card: #162033;
+    --card-active: #1e293b;
+    --border: #283548;
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --accent-2: #22c55e;
+    --warn: #f59e0b;
+    --danger: #f43f5e;
+    --purple: #a78bfa;
+  }
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  html, body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+    line-height: 1.45;
+  }
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: calc(28px + env(safe-area-inset-bottom));
+  }
+  button, select, input, textarea, a {
+    font-family: inherit;
+    touch-action: manipulation;
+  }
+
+  .app-shell {
+    width: 100%;
+    max-width: 680px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+  }
+
+  /* 1. 상단 고정 영역 */
+  .sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: var(--header-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 14px 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+  .top-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .top-title-row h1 {
+    font-size: 16.5px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .total-pill {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(56, 189, 248, 0.16);
+    color: #7dd3fc;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    white-space: nowrap;
+  }
+  .mini-btn {
+    border: 1px solid var(--border);
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 5px 9px;
+    border-radius: 8px;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  /* 데이터 소스 상태 배너 */
+  .data-status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    border: 1px solid var(--border);
+    background: #111c30;
+    color: #cbd5e1;
+    transition: all 0.2s ease;
+  }
+  .data-status-bar.loading {
+    border-color: rgba(56, 189, 248, 0.45);
+    background: rgba(56, 189, 248, 0.12);
+    color: #7dd3fc;
+  }
+  .data-status-bar.live {
+    border-color: rgba(34, 197, 94, 0.5);
+    background: rgba(34, 197, 94, 0.14);
+    color: #86efac;
+  }
+  .data-status-bar.error {
+    border-color: rgba(244, 63, 94, 0.55);
+    background: rgba(244, 63, 94, 0.14);
+    color: #fda4af;
+  }
+  .status-left {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+  }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: #94a3b8;
+  }
+  .data-status-bar.loading .status-dot {
+    background: #38bdf8;
+    box-shadow: 0 0 8px #38bdf8;
+  }
+  .data-status-bar.live .status-dot {
+    background: #22c55e;
+    box-shadow: 0 0 8px #22c55e;
+  }
+  .data-status-bar.error .status-dot {
+    background: #f43f5e;
+    box-shadow: 0 0 8px #f43f5e;
+  }
+  .status-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .status-sub {
+    font-size: 10.5px;
+    font-weight: 600;
+    opacity: 0.85;
+    margin-left: 4px;
+  }
+  .sync-btn {
+    flex-shrink: 0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(15, 23, 42, 0.65);
+    color: #f8fafc;
+    border-radius: 7px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .sync-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  /* 검색창 (iOS 자동 줌 방지 16px 폰트 적용) */
+  .search-wrap {
+    position: relative;
+    width: 100%;
+  }
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 15px;
+    pointer-events: none;
+  }
+  .search-input {
+    width: 100%;
+    background: #090e1a;
+    border: 1.5px solid #334155;
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 10px 38px 10px 36px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .search-input::placeholder {
+    color: #64748b;
+    font-size: 14px;
+  }
+  .search-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+  }
+  .search-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: none;
+    background: #334155;
+    color: #f8fafc;
+    font-size: 13px;
+    font-weight: 700;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .search-clear.show {
+    display: flex;
+  }
+
+  /* 2. 권역별 클릭창 */
+  .region-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .region-btn {
+    border: 1px solid var(--border);
+    background: #162033;
+    color: #cbd5e1;
+    border-radius: 10px;
+    padding: 8px 6px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    white-space: nowrap;
+    transition: all 0.14s ease;
+  }
+  .region-btn .cnt {
+    font-size: 11px;
+    font-weight: 600;
+    opacity: 0.85;
+  }
+  .region-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #061826;
+    box-shadow: 0 4px 12px rgba(56, 189, 248, 0.28);
+  }
+
+  /* 세부 필터 & 정렬 영역 (수정 1: 윗줄 셀렉트 2개, 아랫줄 정렬 버튼 3개 꽉 차게 배치해 잘림 방지) */
+  .sub-filter-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .select-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  .sub-select {
+    width: 100%;
+    background: #0f172a;
+    border: 1px solid var(--border);
+    color: #e2e8f0;
+    border-radius: 9px;
+    padding: 7px 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    outline: none;
+  }
+  .sort-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .sort-btn {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #0f172a;
+    border: 1px solid var(--border);
+    color: #cbd5e1;
+    border-radius: 9px;
+    padding: 7px 8px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+    cursor: pointer;
+    white-space: nowrap;
+    word-break: keep-all;
+  }
+  .sort-btn.active {
+    border-color: var(--accent-2);
+    color: #86efac;
+    background: rgba(34, 197, 94, 0.14);
+  }
+
+  /* 결과 요약 바 */
+  .result-status-bar {
+    padding: 9px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    background: #0d1526;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+  }
+  .result-status-bar strong {
+    color: #38bdf8;
+    font-weight: 800;
+  }
+
+  /* 3. 골프장 상세 카드 리스트 */
+  .course-list {
+    padding: 10px 12px 24px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+  }
+  .course-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 13px 14px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.24);
+    transition: border-color 0.15s ease, transform 0.12s ease;
+    cursor: pointer;
+  }
+  .course-card:active {
+    transform: scale(0.992);
+  }
+  .course-card.highlighted {
+    border-color: var(--accent-2);
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.35);
+    background: #19273c;
+  }
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 7px;
+  }
+  .card-title {
+    font-size: 15.5px;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.35;
+    word-break: keep-all;
+  }
+  .card-num {
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+    margin-right: 4px;
+  }
+  .card-caterer {
+    color: var(--accent);
+    font-weight: 800;
+  }
+  .card-detail-btn {
+    flex-shrink: 0;
+    background: rgba(56, 189, 248, 0.14);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    color: #7dd3fc;
+    border-radius: 8px;
+    padding: 5px 9px;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  /* 배지 태그 */
+  .badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 9px;
+  }
+  .tag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 7px;
+    border-radius: 6px;
+    background: rgba(148, 163, 184, 0.14);
+    color: #e2e8f0;
+  }
+  .tag.region {
+    background: rgba(56, 189, 248, 0.18);
+    color: #7dd3fc;
+  }
+  .tag.change {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fcd34d;
+  }
+  .tag.beer {
+    background: rgba(167, 139, 250, 0.2);
+    color: #ddd6fe;
+  }
+
+  /* 상세 정보 그리드 */
+  .info-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12.5px;
+    color: #cbd5e1;
+  }
+  .info-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    line-height: 1.45;
+  }
+  .info-label {
+    flex-shrink: 0;
+    width: 54px;
+    color: var(--muted);
+    font-weight: 700;
+    font-size: 12px;
+  }
+  .info-val {
+    flex: 1;
+    min-width: 0;
+    word-break: keep-all;
+  }
+  .tel-link {
+    color: #86efac;
+    text-decoration: none;
+    font-weight: 700;
+  }
+
+  /* 인근 골프장 6곳 영역 (세로 1열 나열 및 줄바꿈 처리) */
+  .nearby-box {
+    margin-top: 10px;
+    padding-top: 9px;
+    border-top: 1px dashed rgba(148, 163, 184, 0.26);
+  }
+  .nearby-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #93c5fd;
+    margin-bottom: 6px;
+  }
+  .nearby-head span.sub {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .nearby-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .nearby-item {
+    width: 100%;
+    background: #0d1526;
+    border: 1px solid #263349;
+    border-radius: 9px;
+    padding: 8px 10px;
+    text-align: left;
+    color: #f1f5f9;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    transition: border-color 0.14s ease, background 0.14s ease;
+  }
+  .nearby-item:active {
+    background: rgba(56, 189, 248, 0.18);
+    border-color: var(--accent);
+  }
+  .nearby-left {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .nearby-name-line {
+    font-size: 12.5px;
+    font-weight: 700;
+    line-height: 1.35;
+    white-space: normal;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+  .nearby-name-line .cat {
+    color: #7dd3fc;
+    font-weight: 600;
+  }
+  .nearby-city {
+    font-size: 11px;
+    color: #94a3b8;
+    line-height: 1.3;
+    white-space: normal;
+    word-break: keep-all;
+  }
+  .time-pill {
+    flex-shrink: 0;
+    font-weight: 800;
+    padding: 3px 7px;
+    border-radius: 5px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .t-fast { background: rgba(34, 197, 94, 0.22); color: #86efac; }
+  .t-mid { background: rgba(56, 189, 248, 0.22); color: #7dd3fc; }
+  .t-far { background: rgba(245, 158, 11, 0.22); color: #fcd34d; }
+
+  /* 연동 실패 / 빈 상태 안내 카드 */
+  .empty-state-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 32px 18px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .empty-state-card.error {
+    border-color: rgba(244, 63, 94, 0.45);
+    background: rgba(30, 20, 34, 0.9);
+  }
+  .retry-primary-btn {
+    margin-top: 6px;
+    background: var(--accent);
+    border: none;
+    color: #061826;
+    font-size: 13px;
+    font-weight: 800;
+    padding: 9px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+
+  /* 맨 위로 플로팅 버튼 */
+  .scroll-top-btn {
+    position: fixed;
+    right: 16px;
+    bottom: calc(18px + env(safe-area-inset-bottom));
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.92);
+    border: 1.5px solid var(--accent);
+    color: var(--accent);
+    font-size: 18px;
+    font-weight: 800;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 35;
+  }
+  .scroll-top-btn.show {
+    display: flex;
+  }
+
+  /* 상세 바텀시트 */
+  .sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.72);
+    backdrop-filter: blur(3px);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.22s ease, visibility 0.22s ease;
+    z-index: 70;
+  }
+  .sheet-backdrop.open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+  .detail-sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-width: 680px;
+    margin: 0 auto;
+    height: 92dvh;
+    background: #111827;
+    border-top: 1px solid #334155;
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -16px 48px rgba(0, 0, 0, 0.75);
+    transform: translateY(102%);
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.28s ease;
+    z-index: 80;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .detail-sheet.open {
+    transform: translateY(0);
+    visibility: visible;
+    pointer-events: auto;
+  }
+  .sheet-handle {
+    width: 40px;
+    height: 4px;
+    border-radius: 999px;
+    background: #475569;
+    margin: 9px auto 4px auto;
+    flex-shrink: 0;
+  }
+  .sheet-header {
+    padding: 8px 16px 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .sheet-header h2 {
+    font-size: 16px;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.3;
+    word-break: keep-all;
+  }
+  .sheet-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 14px 16px 28px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* 수정 2: 지도 영역이 어떤 환경에서도 항상 보이도록 높이/폴백/지도앱 링크 강화 */
+  .map-box {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #090e1a;
+    min-height: 224px;
+    display: flex;
+    flex-direction: column;
+  }
+  .map-stage {
+    position: relative;
+    width: 100%;
+    height: 185px;
+    background: #0d172a;
+  }
+  .map-stage iframe {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 185px;
+    border: 0;
+    display: block;
+    background: transparent;
+  }
+  .map-fallback-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 12px;
+    text-align: center;
+    background: radial-gradient(circle at center, rgba(56, 189, 248, 0.14), rgba(11, 17, 32, 0.95));
+    color: #cbd5e1;
+    font-size: 12px;
+  }
+  .map-ext-bar {
+    padding: 9px 11px;
+    background: #162033;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 11.5px;
+  }
+  .ext-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .ext-links a {
+    color: #7dd3fc;
+    text-decoration: none;
+    font-weight: 700;
+    padding: 5px 9px;
+    border-radius: 7px;
+    background: rgba(56, 189, 248, 0.14);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    white-space: nowrap;
+  }
+  .sheet-section {
+    background: #162033;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+  }
+  .sheet-section h3 {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .kv-list {
+    display: grid;
+    grid-template-columns: 78px 1fr;
+    gap: 6px 8px;
+    font-size: 13px;
+  }
+  .kv-list .k {
+    color: var(--muted);
+    font-weight: 700;
+  }
+  .kv-list .v {
+    color: #f8fafc;
+    word-break: keep-all;
+  }
+  .km-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 11px;
+    border-radius: 9px;
+    background: #0d1526;
+    border: 1px solid #283548;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+  .km-card:last-child { margin-bottom: 0; }
+  .sheet-nearby-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 9px 11px;
+    border-radius: 9px;
+    background: #0d1526;
+    border: 1px solid #283548;
+    margin-bottom: 6px;
+    cursor: pointer;
+  }
+  .sheet-nearby-row:last-child { margin-bottom: 0; }
+
+  .toast {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    bottom: calc(20px + env(safe-area-inset-bottom));
+    max-width: 480px;
+    margin: 0 auto;
+    background: #065f46;
+    color: #ecfdf5;
+    border: 1px solid #10b981;
+    padding: 11px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    z-index: 200;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.2s ease;
+    pointer-events: none;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <!-- 상단 고정 -->
+  <header class="sticky-top">
+    <div class="top-title-row">
+      <h1>⛳ 중부·강원 골프장 <span class="total-pill" id="totalBadge">- 개소</span> <span class="total-pill" style="background:rgba(148,163,184,0.16);color:#cbd5e1;border-color:rgba(148,163,184,0.35);">읽기 전용</span></h1>
+    </div>
+
+    <!-- 실시간 구글시트 연결 상태 표시줄 -->
+    <div class="data-status-bar loading" id="dataStatusBar" role="status" aria-live="polite">
+      <div class="status-left">
+        <span class="status-dot"></span>
+        <span class="status-text" id="dataStatusText">구글시트 실시간 데이터 연결 중...</span>
+      </div>
+      <button type="button" class="sync-btn" id="syncLiveBtn">새로고침 ↻</button>
+    </div>
+
+    <!-- 검색창 -->
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input
+        type="search"
+        id="searchInput"
+        class="search-input"
+        placeholder="골프장명, 위탁사, 시·군, 도매장, 키맨 검색..."
+        autocomplete="off"
+      />
+      <button type="button" id="searchClearBtn" class="search-clear" aria-label="검색어 지우기">✕</button>
+    </div>
+
+    <!-- 권역별 클릭창 -->
+    <div class="region-grid" id="regionGrid" role="tablist" aria-label="권역 선택">
+      <button type="button" class="region-btn active" data-region="ALL">전체 <span class="cnt">(0)</span></button>
+      <button type="button" class="region-btn" data-region="경기권">경기권 <span class="cnt">(0)</span></button>
+      <button type="button" class="region-btn" data-region="강원권">강원권 <span class="cnt">(0)</span></button>
+      <button type="button" class="region-btn" data-region="충청권">충청권 <span class="cnt">(0)</span></button>
+      <button type="button" class="region-btn" data-region="인천권">인천권 <span class="cnt">(0)</span></button>
+      <button type="button" class="region-btn" data-region="서울">서울 <span class="cnt">(0)</span></button>
+    </div>
+
+    <!-- 세부 시·군 / 위탁사 / 정렬 선택 (2단 배치로 잘림 방지) -->
+    <div class="sub-filter-stack">
+      <div class="select-row">
+        <select id="cityFilter" class="sub-select" aria-label="시·군 선택">
+          <option value="ALL">시·군 전체</option>
+        </select>
+        <select id="catererFilter" class="sub-select" aria-label="위탁사 선택">
+          <option value="ALL">위탁사 전체</option>
+        </select>
+      </div>
+      <div class="sort-row">
+        <button type="button" class="sort-btn active" data-sort="region">지역순</button>
+        <button type="button" class="sort-btn" data-sort="name">가나다순</button>
+        <button type="button" class="sort-btn" data-sort="num">번호순</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 검색 결과 건수 표시 바 -->
+  <div class="result-status-bar">
+    <span id="resultSummary">구글시트 데이터 불러오는 중...</span>
+    <button type="button" id="resetFilterBtn" style="background:none; border:none; color:#94a3b8; font-size:11.5px; font-weight:700; cursor:pointer; white-space:nowrap;">필터 초기화 ↺</button>
+  </div>
+
+  <!-- 골프장 상세 정보 카드 목록 -->
+  <main class="course-list" id="courseList"></main>
+</div>
+
+<!-- 맨 위로 이동 버튼 -->
+<button type="button" id="scrollTopBtn" class="scroll-top-btn" aria-label="맨 위로">↑</button>
+
+<!-- 상세 정보 바텀시트 -->
+<div class="sheet-backdrop" id="sheetBackdrop"></div>
+<section class="detail-sheet" id="detailSheet" aria-hidden="true">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <h2 id="sheetTitle">골프장 상세 정보</h2>
+    <div style="display:flex; gap:6px; flex-shrink:0;">
+      <button type="button" class="mini-btn" id="sheetCloseBtn">닫기 ✕</button>
+    </div>
+  </div>
+  <div class="sheet-body" id="sheetBody"></div>
+</section>
+<div class="toast" id="toast"></div>
+
+<script>
+const LIVE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxc1R7HXcFZaRurUA9gNqeoePlKaAliEKDcGsKWodGwL2HAzk_eO8N6uuK5OuEyY3TB/exec";
+
+// 내장 기본 데이터 없이 실시간 구글 시트 연동 데이터만 보관
+let golfData = [];
+let connectionState = {
+  status: "loading",
+  errorMessage: ""
+};
+
+function normalizeCourseItem(item) {
+  const copy = { ...item };
+  if (copy.num !== undefined && copy.num !== null && copy.num !== "") {
+    copy.num = Number(copy.num);
+  }
+  if (copy.mem !== undefined && copy.mem !== null && copy.mem !== "") {
+    const m = Number(copy.mem);
+    copy.mem = Number.isNaN(m) ? null : m;
+  } else {
+    copy.mem = null;
+  }
+  if (copy.pub !== undefined && copy.pub !== null && copy.pub !== "") {
+    const p = Number(copy.pub);
+    copy.pub = Number.isNaN(p) ? null : p;
+  } else {
+    copy.pub = null;
+  }
+
+  if (Array.isArray(copy.keymen) && copy.keymen.length > 0) {
+    copy.keymen = copy.keymen
+      .map(k => ({
+        name: String(k.name || "").trim(),
+        role: String(k.role || "").trim(),
+        mobile: String(k.mobile || "").trim()
+      }))
+      .filter(k => k.name || k.role || k.mobile)
+      .slice(0, 3);
+  } else {
+    const arr = [];
+    const k1Name = copy.keyman1 || copy.keyman;
+    const k1Role = copy.role1 || copy.role;
+    const k1Mobile = copy.mobile1 || copy.mobile;
+    if (k1Name || k1Role || k1Mobile) {
+      arr.push({
+        name: String(k1Name || "").trim(),
+        role: String(k1Role || "").trim(),
+        mobile: String(k1Mobile || "").trim()
+      });
+    }
+    if (copy.keyman2 || copy.role2 || copy.mobile2) {
+      arr.push({
+        name: String(copy.keyman2 || "").trim(),
+        role: String(copy.role2 || "").trim(),
+        mobile: String(copy.mobile2 || "").trim()
+      });
+    }
+    if (copy.keyman3 || copy.role3 || copy.mobile3) {
+      arr.push({
+        name: String(copy.keyman3 || "").trim(),
+        role: String(copy.role3 || "").trim(),
+        mobile: String(copy.mobile3 || "").trim()
+      });
+    }
+    copy.keymen = arr.slice(0, 3);
+  }
+  const first = copy.keymen[0] || { name: null, role: null, mobile: null };
+  copy.keyman = first.name || null;
+  copy.role = first.role || null;
+  copy.mobile = first.mobile || null;
+
+  ["region", "change", "name", "addr", "tel", "caterer", "wh", "draft", "can", "note"].forEach(field => {
+    if (copy[field] !== undefined && copy[field] !== null) {
+      const s = String(copy[field]).trim();
+      copy[field] = s === "" ? null : s;
+    } else {
+      copy[field] = null;
+    }
+  });
+  return copy;
+}
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
+}
+
+function formatCourseName(item) {
+  return item.caterer ? `${item.name}(${item.caterer})` : item.name;
+}
+
+function formatKeymenSummary(item) {
+  const list = item.keymen || [];
+  if (!list.length) return "";
+  return list
+    .map((k, idx) => {
+      const info = [k.name, k.role, k.mobile].filter(Boolean).join(" ");
+      return list.length > 1 ? `[${idx + 1}] ${info}` : info;
+    })
+    .join(" / ");
+}
+
+function formatNowTime() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, "0");
+  const mm = String(now.getMinutes()).padStart(2, "0");
+  const ss = String(now.getSeconds()).padStart(2, "0");
+  return `${hh}:${mm}:${ss}`;
+}
+
+function setDataSourceBanner(mode, detailMsg) {
+  const bar = document.getElementById("dataStatusBar");
+  const textEl = document.getElementById("dataStatusText");
+  const btn = document.getElementById("syncLiveBtn");
+  if (!bar || !textEl) return;
+
+  bar.classList.remove("loading", "live", "error");
+  bar.classList.add(mode);
+
+  if (mode === "loading") {
+    textEl.innerHTML = `구글시트 실시간 데이터 불러오는 중...`;
+    if (btn) btn.disabled = true;
+  } else if (mode === "live") {
+    textEl.innerHTML = `🟢 실시간 구글시트 로드됨 <span class="status-sub">(${detailMsg || formatNowTime()})</span>`;
+    if (btn) btn.disabled = false;
+  } else {
+    textEl.innerHTML = `🔴 구글시트 연동 실패 <span class="status-sub">(${detailMsg || "네트워크/권한 확인 필요"})</span>`;
+    if (btn) btn.disabled = false;
+  }
+}
+
+function fetchViaJsonp(url, timeoutMs = 10000) {
+  return new Promise((resolve, reject) => {
+    const cbName = "__gsheet_cb_" + Date.now() + "_" + Math.floor(Math.random() * 10000);
+    const script = document.createElement("script");
+    let finished = false;
+
+    const cleanup = () => {
+      if (script.parentNode) script.parentNode.removeChild(script);
+      try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+    };
+
+    const timer = setTimeout(() => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      reject(new Error("JSONP 응답 시간 초과"));
+    }, timeoutMs);
+
+    window[cbName] = (data) => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      cleanup();
+      resolve(data);
+    };
+
+    script.onerror = () => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      cleanup();
+      reject(new Error("스크립트 로드 차단/실패"));
+    };
+
+    const sep = url.includes("?") ? "&" : "?";
+    script.src = `${url}${sep}callback=${cbName}&_ts=${Date.now()}`;
+    document.head.appendChild(script);
+  });
+}
+
+async function requestSheetPayload() {
+  const sep = LIVE_SHEET_API_URL.includes("?") ? "&" : "?";
+  const reqUrl = `${LIVE_SHEET_API_URL}${sep}_ts=${Date.now()}`;
+  try {
+    const res = await fetch(reqUrl, {
+      method: "GET",
+      redirect: "follow"
+    });
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+    const text = await res.text();
+    return JSON.parse(text);
+  } catch (fetchErr) {
+    return await fetchViaJsonp(LIVE_SHEET_API_URL, 10000);
+  }
+}
+
+async function fetchLiveGolfData(isManual = false) {
+  connectionState = { status: "loading", errorMessage: "" };
+  setDataSourceBanner("loading");
+  if (golfData.length === 0) {
+    renderList();
+  }
+
+  try {
+    const payload = await requestSheetPayload();
+    const rows = Array.isArray(payload)
+      ? payload
+      : (Array.isArray(payload.data) ? payload.data : (Array.isArray(payload.records) ? payload.records : null));
+
+    if (!rows || rows.length === 0) {
+      throw new Error("시트 데이터가 비어 있음");
+    }
+
+    const validRows = rows
+      .map(normalizeCourseItem)
+      .filter(r => r.name && !Number.isNaN(r.num));
+
+    if (validRows.length === 0) {
+      throw new Error("유효한 골프장 레코드 없음");
+    }
+
+    golfData = validRows;
+    connectionState = { status: "live", errorMessage: "" };
+    const nowStr = formatNowTime();
+    setDataSourceBanner("live", `${golfData.length}개소 · ${nowStr} 동기화`);
+    renderList();
+
+    if (state.sheetCourseNum !== null) {
+      openDetailSheet(state.sheetCourseNum);
+    }
+    if (isManual) {
+      showToast(`실시간 구글시트 최신 데이터(${golfData.length}개소)를 반영했습니다.`);
+    }
+  } catch (err) {
+    console.warn("실시간 구글시트 로드 실패:", err);
+    golfData = [];
+    const reason = err && err.message ? err.message : "연결 불가";
+    connectionState = { status: "error", errorMessage: reason };
+    closeDetailSheet();
+    setDataSourceBanner("error", reason);
+    renderList();
+    if (isManual) {
+      showToast(`구글시트 연결 실패: ${reason}`);
+    }
+  }
+}
+
+// =========================================================================
+// 시·군·읍·면 좌표 기반 위치 및 인근 골프장 6곳 소요시간 계산
+// =========================================================================
+const LOCALITY_COORDS = {
+  "강릉시": [37.75, 128.88], "고성군": [38.38, 128.47], "동해시": [37.52, 129.11],
+  "삼척시": [37.45, 129.16], "속초시": [38.20, 128.59], "양양군": [38.07, 128.62],
+  "영월군": [37.18, 128.46], "원주시": [37.34, 127.92], "정선군": [37.38, 128.66],
+  "철원군": [38.14, 127.31], "춘천시": [37.88, 127.73], "태백시": [37.16, 128.98],
+  "평창군": [37.37, 128.39], "홍천군": [37.69, 127.88], "횡성군": [37.49, 127.98],
+  "가평군": [37.83, 127.51], "고양시": [37.66, 126.83], "광주시": [37.41, 127.26],
+  "구리시": [37.59, 127.13], "군포시": [37.36, 126.93], "김포시": [37.62, 126.71],
+  "남양주시": [37.63, 127.21], "동두천시": [37.90, 127.06], "성남시": [37.42, 127.12],
+  "수원시": [37.26, 127.03], "시흥시": [37.38, 126.80], "안산시": [37.32, 126.83],
+  "안성시": [37.01, 127.28], "양주시": [37.78, 127.04], "양평군": [37.49, 127.49],
+  "여주시": [37.29, 127.63], "연천군": [38.09, 127.07], "용인시": [37.24, 127.17],
+  "이천시": [37.27, 127.43], "파주시": [37.76, 126.78], "평택시": [36.99, 127.11],
+  "포천시": [37.89, 127.20], "하남시": [37.54, 127.21], "화성시": [37.20, 126.83],
+  "강서구": [37.55, 126.84], "강화군": [37.74, 126.48], "인천 서구": [37.54, 126.67],
+  "연수구": [37.41, 126.67], "인천 중구": [37.47, 126.52],
+  "유성구": [36.36, 127.35], "세종": [36.59, 127.25],
+  "계룡시": [36.27, 127.25], "공주시": [36.45, 127.12], "금산군": [36.10, 127.49],
+  "논산시": [36.18, 127.09], "당진시": [36.89, 126.64], "부여군": [36.27, 126.91],
+  "서산시": [36.78, 126.45], "아산시": [36.79, 127.00], "천안시": [36.81, 127.15],
+  "태안군": [36.74, 126.30], "단양군": [36.98, 128.36], "보은군": [36.48, 127.73],
+  "옥천군": [36.30, 127.57], "음성군": [36.94, 127.69], "제천시": [37.13, 128.21],
+  "진천군": [36.85, 127.44], "청주시": [36.64, 127.49], "충주시": [36.99, 127.92]
+};
+
+const SUB_LOCALITY_COORDS = [
+  { key: "곤지암읍", coords: [37.365, 127.355] },
+  { key: "산북면", coords: [37.395, 127.415] },
+  { key: "도척면", coords: [37.320, 127.310] },
+  { key: "금사면", coords: [37.390, 127.490] },
+  { key: "대신면", coords: [37.365, 127.565] },
+  { key: "북내면", coords: [37.345, 127.665] },
+  { key: "가남읍", coords: [37.215, 127.545] },
+  { key: "점동면", coords: [37.215, 127.665] },
+  { key: "장호원읍", coords: [37.115, 127.625] },
+  { key: "감곡면", coords: [37.105, 127.645] },
+  { key: "일죽면", coords: [37.095, 127.485] },
+  { key: "죽산면", coords: [37.075, 127.425] },
+  { key: "삼성면", coords: [37.015, 127.505] },
+  { key: "설악면", coords: [37.685, 127.485] },
+  { key: "남산면", coords: [37.795, 127.605] },
+  { key: "서면", coords: [37.665, 127.685] },
+  { key: "화도읍", coords: [37.655, 127.315] },
+  { key: "기흥구", coords: [37.275, 127.115] },
+  { key: "처인구", coords: [37.205, 127.245] },
+  { key: "모가면", coords: [37.185, 127.455] },
+  { key: "호법면", coords: [37.225, 127.415] },
+  { key: "지정면", coords: [37.395, 127.845] },
+  { key: "문막읍", coords: [37.315, 127.815] },
+  { key: "부론면", coords: [37.215, 127.755] },
+  { key: "앙성면", coords: [37.145, 127.785] }
+];
+
+const DIRECT_DRIVE_OVERRIDES = {
+  "85-147": 10,
+  "89-147": 11,
+  "85-89": 7,
+  "85-87": 8,
+  "85-88": 9,
+  "190-273": 8,
+  "120-276": 12,
+  "120-277": 13,
+  "71-38": 16,
+  "76-35": 17,
+  "127-29": 18
+};
+
+function getCourseLatLng(course) {
+  const addr = course.addr || "";
+  let base = [37.35, 127.30];
+  for (const [k, coords] of Object.entries(LOCALITY_COORDS)) {
+    if (addr.includes(k)) {
+      base = coords;
+      break;
+    }
+  }
+  for (const sub of SUB_LOCALITY_COORDS) {
+    if (addr.includes(sub.key)) {
+      base = sub.coords;
+      break;
+    }
+  }
+  const jLat = (((course.num * 37) % 19) - 9) * 0.0042;
+  const jLng = (((course.num * 53) % 19) - 9) * 0.0048;
+  return [base[0] + jLat, base[1] + jLng];
+}
+
+function extractCityName(addr) {
+  if (!addr) return "";
+  const m = addr.match(/([가-힣]+(?:시|군|구))/);
+  return m ? m[1] : "";
+}
+
+function estimateDriveMinutes(a, b) {
+  const pairKey = a.num < b.num ? `${a.num}-${b.num}` : `${b.num}-${a.num}`;
+  if (DIRECT_DRIVE_OVERRIDES[pairKey] !== undefined) {
+    return DIRECT_DRIVE_OVERRIDES[pairKey];
+  }
+  const [lat1, lon1] = getCourseLatLng(a);
+  const [lat2, lon2] = getCourseLatLng(b);
+  const dLat = (lat2 - lat1) * 111;
+  const dLon = (lon2 - lon1) * 88.8;
+  const straightKm = Math.sqrt(dLat * dLat + dLon * dLon);
+  const roadKm = straightKm * 1.28 + 1.5;
+  return Math.max(4, Math.round((roadKm / 46) * 60));
+}
+
+function getNearbyCoursesTop6(targetCourse, allCourses) {
+  const list = [];
+  allCourses.forEach(other => {
+    if (other.num === targetCourse.num) return;
+    const mins = estimateDriveMinutes(targetCourse, other);
+    const otherCity = extractCityName(other.addr);
+    list.push({ course: other, mins, otherCity });
+  });
+  list.sort((x, y) => x.mins - y.mins || x.course.num - y.course.num);
+  return list.slice(0, 6);
+}
+
+// =========================================================================
+// 앱 상태 및 필터 동기화
+// =========================================================================
+const state = {
+  region: "ALL",
+  city: "ALL",
+  caterer: "ALL",
+  query: "",
+  sort: "region",
+  highlightedNum: null,
+  sheetCourseNum: null
+};
+
+function syncFilterOptions() {
+  const totalCount = golfData.length;
+  document.getElementById("totalBadge").textContent =
+    connectionState.status === "live" ? `${totalCount}개소` : "- 개소";
+
+  const regionCounts = { ALL: totalCount, "경기권": 0, "강원권": 0, "충청권": 0, "인천권": 0, "서울": 0 };
+  const citySet = new Set();
+  const catererSet = new Set();
+
+  golfData.forEach(d => {
+    if (d.region && regionCounts[d.region] !== undefined) {
+      regionCounts[d.region]++;
+    }
+    if (state.region === "ALL" || d.region === state.region) {
+      const city = extractCityName(d.addr);
+      if (city) citySet.add(city);
+    }
+    if (d.caterer && d.caterer.trim()) {
+      catererSet.add(d.caterer.trim());
+    }
+  });
+
+  document.querySelectorAll("#regionGrid .region-btn").forEach(btn => {
+    const reg = btn.dataset.region;
+    const label = reg === "ALL" ? "전체" : reg;
+    const cnt = regionCounts[reg] ?? 0;
+    btn.innerHTML = `${label} <span class="cnt">(${cnt})</span>`;
+  });
+
+  const citySelect = document.getElementById("cityFilter");
+  const prevCity = state.city;
+  const sortedCities = Array.from(citySet).sort((a, b) => a.localeCompare(b, "ko"));
+  citySelect.innerHTML = `<option value="ALL">시·군 전체</option>`;
+  sortedCities.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c;
+    opt.textContent = c;
+    citySelect.appendChild(opt);
+  });
+  if (prevCity === "ALL" || citySet.has(prevCity)) {
+    citySelect.value = prevCity;
+  } else {
+    state.city = "ALL";
+    citySelect.value = "ALL";
+  }
+
+  const catererSelect = document.getElementById("catererFilter");
+  const prevCat = state.caterer;
+  const sortedCats = Array.from(catererSet).sort((a, b) => a.localeCompare(b, "ko"));
+  catererSelect.innerHTML = `<option value="ALL">위탁사 전체</option><option value="NONE">위탁사 미기재</option>`;
+  sortedCats.forEach(cat => {
+    const opt = document.createElement("option");
+    opt.value = cat;
+    opt.textContent = cat;
+    catererSelect.appendChild(opt);
+  });
+  if (prevCat === "ALL" || prevCat === "NONE" || catererSet.has(prevCat)) {
+    catererSelect.value = prevCat;
+  } else {
+    state.caterer = "ALL";
+    catererSelect.value = "ALL";
+  }
+}
+
+function getFilteredAndSortedCourses() {
+  const q = (state.query || "").trim().toLowerCase();
+  const filtered = golfData.filter(item => {
+    if (state.region !== "ALL" && item.region !== state.region) return false;
+    if (state.city !== "ALL" && extractCityName(item.addr) !== state.city) return false;
+    if (state.caterer === "NONE" && item.caterer) return false;
+    if (state.caterer !== "ALL" && state.caterer !== "NONE" && item.caterer !== state.caterer) return false;
+
+    if (!q) return true;
+    const kmText = (item.keymen || []).map(k => `${k.name || ""} ${k.role || ""} ${k.mobile || ""}`).join(" ");
+    const haystack = [
+      String(item.num || ""),
+      item.name,
+      item.caterer,
+      item.region,
+      item.change,
+      item.addr,
+      item.tel,
+      item.wh,
+      item.draft,
+      item.can,
+      item.note,
+      kmText
+    ].filter(Boolean).join(" ").toLowerCase();
+
+    return haystack.includes(q);
+  });
+
+  const sorted = [...filtered];
+  if (state.sort === "name") {
+    sorted.sort((a, b) => a.name.localeCompare(b.name, "ko"));
+  } else if (state.sort === "num") {
+    sorted.sort((a, b) => (a.num || 0) - (b.num || 0));
+  } else {
+    sorted.sort((a, b) => {
+      const rCmp = (a.region || "").localeCompare(b.region || "", "ko");
+      if (rCmp !== 0) return rCmp;
+      const aCmp = (a.addr || "").localeCompare(b.addr || "", "ko");
+      if (aCmp !== 0) return aCmp;
+      return a.name.localeCompare(b.name, "ko");
+    });
+  }
+  return sorted;
+}
+
+// =========================================================================
+// 메인 리스트 렌더링
+// =========================================================================
+function renderList() {
+  syncFilterOptions();
+  const listEl = document.getElementById("courseList");
+  const summaryEl = document.getElementById("resultSummary");
+
+  if (connectionState.status === "loading" && golfData.length === 0) {
+    summaryEl.innerHTML = `구글시트 실시간 데이터 수신 대기 중...`;
+    listEl.innerHTML = `
+      <div class="empty-state-card">
+        <div style="font-size:26px;">⏳</div>
+        <div style="font-size:15px; font-weight:800; color:#f8fafc;">구글 시트에서 최신 골프장 정보를 불러오는 중입니다</div>
+        <div style="font-size:12.5px; color:#94a3b8; line-height:1.5;">실시간 연동 전용 버전입니다. 잠시만 기다려 주세요.</div>
+      </div>
+    `;
+    return;
+  }
+
+  if (connectionState.status === "error" || golfData.length === 0) {
+    summaryEl.innerHTML = `데이터 연결 안 됨 · <strong style="color:#fda4af;">0개소</strong>`;
+    listEl.innerHTML = `
+      <div class="empty-state-card error">
+        <div style="font-size:28px;">⚠️</div>
+        <div style="font-size:15.5px; font-weight:800; color:#fecdd3;">구글 시트와 연동되지 않아 자료를 표시할 수 없습니다</div>
+        <div style="font-size:12.5px; color:#cbd5e1; line-height:1.55; max-width:340px;">
+          네트워크 상태 또는 구글 앱스 스크립트 배포 권한을 확인해 주세요.<br/>
+          <span style="color:#fda4af; font-size:11.5px;">(오류 상세: ${connectionState.errorMessage || "응답 없음"})</span>
+        </div>
+        <button type="button" class="retry-primary-btn" id="emptyRetryBtn">구글 시트 다시 연결 ↻</button>
+      </div>
+    `;
+    const retryBtn = document.getElementById("emptyRetryBtn");
+    if (retryBtn) {
+      retryBtn.addEventListener("click", () => fetchLiveGolfData(true));
+    }
+    return;
+  }
+
+  const courses = getFilteredAndSortedCourses();
+  const regionLabel = state.region === "ALL" ? "전체 권역" : state.region;
+  summaryEl.innerHTML = `${regionLabel} · 검색 결과 <strong>${courses.length}개소</strong>`;
+
+  listEl.innerHTML = "";
+
+  if (courses.length === 0) {
+    listEl.innerHTML = `
+      <div class="empty-state-card">
+        <div style="font-size:15px; font-weight:800; color:#f8fafc;">일치하는 골프장이 없습니다</div>
+        <div style="font-size:12.5px; color:#94a3b8;">검색어를 지우거나 권역 버튼을 [전체]로 변경해 보세요.</div>
+      </div>
+    `;
+    return;
+  }
+
+  const frag = document.createDocumentFragment();
+
+  courses.forEach(c => {
+    const card = document.createElement("article");
+    card.className = "course-card" + (c.num === state.highlightedNum ? " highlighted" : "");
+    card.id = `course-card-${c.num}`;
+
+    const holes = [
+      c.mem ? `회원 ${c.mem}H` : null,
+      c.pub ? `대중 ${c.pub}H` : null
+    ].filter(Boolean).join(" / ") || "홀 미기재";
+
+    const beerInfo = [
+      c.draft ? `Draft: ${c.draft}` : null,
+      c.can ? `Can: ${c.can}` : null
+    ].filter(Boolean).join(" · ");
+
+    const keymanSummary = formatKeymenSummary(c);
+    const titleHtml = c.caterer
+      ? `${c.name}<span class="card-caterer">(${c.caterer})</span>`
+      : c.name;
+
+    const nearby6 = getNearbyCoursesTop6(c, golfData);
+    const nearbyHtml = nearby6.map(item => {
+      const nc = item.course;
+      const catLabel = nc.caterer || "미기재";
+      const tCls = item.mins <= 12 ? "t-fast" : (item.mins <= 22 ? "t-mid" : "t-far");
+      return `
+        <button type="button" class="nearby-item" data-jump-num="${nc.num}">
+          <div class="nearby-left">
+            <div class="nearby-name-line">${nc.name} <span class="cat">(${catLabel})</span></div>
+            <div class="nearby-city">${item.otherCity || nc.region}</div>
+          </div>
+          <span class="time-pill ${tCls}">약 ${item.mins}분</span>
+        </button>
+      `;
+    }).join("");
+
+    const telHtml = c.tel && c.tel !== "-" && c.tel !== "000-000-0000"
+      ? `<a href="tel:${c.tel}" class="tel-link" onclick="event.stopPropagation()">${c.tel}</a>`
+      : (c.tel || "-");
+
+    card.innerHTML = `
+      <div class="card-top">
+        <div class="card-title"><span class="card-num">#${c.num}</span>${titleHtml}</div>
+        <button type="button" class="card-detail-btn" data-detail-num="${c.num}">상세·지도</button>
+      </div>
+
+      <div class="badge-row">
+        <span class="tag region">${c.region}</span>
+        <span class="tag">${holes}</span>
+        ${c.change && c.change !== "기존" ? `<span class="tag change">${c.change}</span>` : ""}
+        ${beerInfo ? `<span class="tag beer">${beerInfo}</span>` : ""}
+      </div>
+
+      <div class="info-rows">
+        <div class="info-line"><span class="info-label">주소</span><span class="info-val">${c.addr || "-"}</span></div>
+        <div class="info-line"><span class="info-label">전화</span><span class="info-val">${telHtml}</span></div>
+        ${c.wh ? `<div class="info-line"><span class="info-label">도매장</span><span class="info-val">${c.wh}</span></div>` : ""}
+        ${keymanSummary ? `<div class="info-line"><span class="info-label">키맨(${c.keymen.length})</span><span class="info-val">${keymanSummary}</span></div>` : ""}
+        ${c.note ? `<div class="info-line"><span class="info-label">메모</span><span class="info-val">${c.note}</span></div>` : ""}
+      </div>
+
+      <div class="nearby-box">
+        <div class="nearby-head">
+          <span>📍 인근 골프장 6곳 (차량 이동시간)</span>
+          <span class="sub">터치 시 바로 이동</span>
+        </div>
+        <div class="nearby-grid">${nearbyHtml}</div>
+      </div>
+    `;
+
+    card.addEventListener("click", () => {
+      openDetailSheet(c.num);
+    });
+
+    card.querySelectorAll(".nearby-item").forEach(btn => {
+      btn.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        const targetNum = Number(btn.dataset.jumpNum);
+        jumpToCourse(targetNum);
+      });
+    });
+
+    frag.appendChild(card);
+  });
+
+  listEl.appendChild(frag);
+}
+
+function jumpToCourse(targetNum) {
+  const target = golfData.find(d => d.num === targetNum);
+  if (!target) return;
+
+  state.region = "ALL";
+  state.city = "ALL";
+  state.caterer = "ALL";
+  state.query = "";
+  state.highlightedNum = targetNum;
+
+  document.getElementById("searchInput").value = "";
+  document.getElementById("searchClearBtn").classList.remove("show");
+  document.querySelectorAll("#regionGrid .region-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.region === "ALL");
+  });
+
+  renderList();
+  const el = document.getElementById(`course-card-${targetNum}`);
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  showToast(`#${target.num} ${formatCourseName(target)} 위치로 이동했습니다.`);
+}
+
+// =========================================================================
+// 상세 바텀시트 (지도, 길찾기, 상세정보, 인근 6곳)
+// =========================================================================
+function openDetailSheet(num) {
+  const course = golfData.find(d => d.num === num);
+  if (!course) return;
+  state.sheetCourseNum = num;
+  state.highlightedNum = num;
+
+  document.getElementById("sheetTitle").textContent = `#${course.num} ${formatCourseName(course)}`;
+  const body = document.getElementById("sheetBody");
+
+  const [lat, lng] = getCourseLatLng(course);
+  const delta = 0.025;
+  const bbox = `${(lng - delta).toFixed(5)},${(lat - delta * 0.7).toFixed(5)},${(lng + delta).toFixed(5)},${(lat + delta * 0.7).toFixed(5)}`;
+  const osmEmbedUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat.toFixed(5)}%2C${lng.toFixed(5)}`;
+
+  const naverUrl = `https://map.naver.com/p/search/${encodeURIComponent(course.name)}`;
+  const kakaoUrl = `https://map.kakao.com/link/search/${encodeURIComponent(course.name)}`;
+  const googleUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${course.name} ${course.addr || ""}`.trim())}`;
+
+  const holes = [
+    course.mem ? `회원제 ${course.mem}홀` : null,
+    course.pub ? `대중제 ${course.pub}홀` : null
+  ].filter(Boolean).join(" / ") || "미기재";
+
+  const keymen = course.keymen || [];
+  const kmHtml = keymen.length
+    ? keymen.map((k, idx) => `
+        <div class="km-card">
+          <div>
+            <span style="color:#38bdf8; font-weight:800; margin-right:6px;">키맨 ${idx + 1}</span>
+            <strong>${k.name || "성명 미기재"}</strong>
+            <span style="color:#94a3b8; margin-left:4px;">${k.role || ""}</span>
+          </div>
+          <div>
+            ${k.mobile ? `<a href="tel:${k.mobile}" class="tel-link">${k.mobile}</a>` : `<span style="color:#64748b;">번호 없음</span>`}
+          </div>
+        </div>
+      `).join("")
+    : `<div style="font-size:12.5px; color:#94a3b8;">등록된 키맨 정보가 없습니다.</div>`;
+
+  const nearby6 = getNearbyCoursesTop6(course, golfData);
+  const nearbyRowsHtml = nearby6.map(item => {
+    const nc = item.course;
+    const cat = nc.caterer || "미기재";
+    const tCls = item.mins <= 12 ? "t-fast" : (item.mins <= 22 ? "t-mid" : "t-far");
+    return `
+      <div class="sheet-nearby-row" data-sheet-jump="${nc.num}">
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:13px; font-weight:800; color:#fff; line-height:1.35; word-break:keep-all;">
+            ${nc.name} <span style="color:#38bdf8;">(${cat})</span>
+          </div>
+          <div style="font-size:11px; color:#94a3b8; margin-top:2px; line-height:1.35; word-break:keep-all;">${nc.addr || "-"}</div>
+        </div>
+        <span class="time-pill ${tCls}" style="font-size:11.5px; padding:3px 7px;">약 ${item.mins}분</span>
+      </div>
+    `;
+  }).join("");
+
+  body.innerHTML = `
+    <div class="map-box">
+      <div class="map-stage">
+        <div class="map-fallback-layer">
+          <div style="font-size:20px;">🗺️</div>
+          <div style="font-weight:800; color:#f8fafc;">${course.name}</div>
+          <div>${course.addr || "주소 정보 없음"}</div>
+          <div style="font-size:11px; color:#7dd3fc;">기준 좌표: ${lat.toFixed(4)}, ${lng.toFixed(4)}</div>
+        </div>
+        <iframe src="${osmEmbedUrl}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="${course.name} 위치 지도"></iframe>
+      </div>
+      <div class="map-ext-bar">
+        <span style="color:#cbd5e1; font-weight:700;">지도·내비 열기:</span>
+        <div class="ext-links">
+          <a href="${naverUrl}" target="_blank" rel="noopener noreferrer">네이버지도 ↗</a>
+          <a href="${kakaoUrl}" target="_blank" rel="noopener noreferrer">카카오맵 ↗</a>
+          <a href="${googleUrl}" target="_blank" rel="noopener noreferrer">구글지도 ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="sheet-section">
+      <h3>기본 및 식음·주류 상세 정보</h3>
+      <div class="kv-list">
+        <div class="k">권역/구분</div><div class="v">${course.region} · ${course.change || "기존"}</div>
+        <div class="k">위탁사</div><div class="v"><strong>${course.caterer || "미기재"}</strong></div>
+        <div class="k">코스규모</div><div class="v">${holes}</div>
+        <div class="k">전화번호</div><div class="v">${course.tel && course.tel !== "-" && course.tel !== "000-000-0000" ? `<a href="tel:${course.tel}" class="tel-link">${course.tel}</a>` : (course.tel || "-")}</div>
+        <div class="k">도매장</div><div class="v">${course.wh || "-"}</div>
+        <div class="k">Draft Beer</div><div class="v">${course.draft || "-"}</div>
+        <div class="k">Can Beer</div><div class="v">${course.can || "-"}</div>
+        <div class="k">주소</div><div class="v">${course.addr || "-"}</div>
+        <div class="k">특이사항</div><div class="v">${course.note || "-"}</div>
+      </div>
+    </div>
+
+    <div class="sheet-section">
+      <h3>담당 키맨 (${keymen.length} / 3명)</h3>
+      ${kmHtml}
+    </div>
+
+    <div class="sheet-section">
+      <h3>인근 골프장 6곳 (차량 소요시간순)</h3>
+      ${nearbyRowsHtml}
+    </div>
+  `;
+
+  body.querySelectorAll(".sheet-nearby-row").forEach(row => {
+    row.addEventListener("click", () => {
+      const nextNum = Number(row.dataset.sheetJump);
+      openDetailSheet(nextNum);
+    });
+  });
+
+  document.getElementById("sheetBackdrop").classList.add("open");
+  const sheet = document.getElementById("detailSheet");
+  sheet.classList.add("open");
+  sheet.setAttribute("aria-hidden", "false");
+  body.scrollTop = 0;
+}
+
+function closeDetailSheet() {
+  document.getElementById("sheetBackdrop").classList.remove("open");
+  const sheet = document.getElementById("detailSheet");
+  sheet.classList.remove("open");
+  sheet.setAttribute("aria-hidden", "true");
+  state.sheetCourseNum = null;
+}
+
+document.getElementById("sheetCloseBtn").onclick = closeDetailSheet;
+document.getElementById("sheetBackdrop").onclick = closeDetailSheet;
+
+// =========================================================================
+// 검색창 (한글 자음·모음 IME 조합 보호 + 디바운스), 필터, 스크롤 바인딩
+// =========================================================================
+const searchInputEl = document.getElementById("searchInput");
+const searchClearBtn = document.getElementById("searchClearBtn");
+let isComposingHangul = false;
+let searchDebounceTimer = null;
+
+function applySearchFilterNow() {
+  clearTimeout(searchDebounceTimer);
+  state.query = searchInputEl.value;
+  searchClearBtn.classList.toggle("show", state.query.length > 0);
+  renderList();
+}
+
+function scheduleSearchFilter() {
+  clearTimeout(searchDebounceTimer);
+  searchClearBtn.classList.toggle("show", searchInputEl.value.length > 0);
+  if (isComposingHangul) return;
+  searchDebounceTimer = setTimeout(() => {
+    state.query = searchInputEl.value;
+    renderList();
+  }, 180);
+}
+
+searchInputEl.addEventListener("compositionstart", () => {
+  isComposingHangul = true;
+  clearTimeout(searchDebounceTimer);
+});
+
+searchInputEl.addEventListener("compositionend", () => {
+  isComposingHangul = false;
+  scheduleSearchFilter();
+});
+
+searchInputEl.addEventListener("input", () => {
+  scheduleSearchFilter();
+});
+
+searchInputEl.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !isComposingHangul) {
+    applySearchFilterNow();
+    searchInputEl.blur();
+  }
+});
+
+searchClearBtn.addEventListener("click", () => {
+  clearTimeout(searchDebounceTimer);
+  isComposingHangul = false;
+  searchInputEl.value = "";
+  state.query = "";
+  searchClearBtn.classList.remove("show");
+  renderList();
+  searchInputEl.focus();
+});
+
+document.querySelectorAll("#regionGrid .region-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("#regionGrid .region-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    state.region = btn.dataset.region;
+    state.city = "ALL";
+    renderList();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+});
+
+document.getElementById("cityFilter").addEventListener("change", e => {
+  state.city = e.target.value;
+  renderList();
+});
+
+document.getElementById("catererFilter").addEventListener("change", e => {
+  state.caterer = e.target.value;
+  renderList();
+});
+
+document.querySelectorAll(".sort-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".sort-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    state.sort = btn.dataset.sort;
+    renderList();
+  });
+});
+
+document.getElementById("resetFilterBtn").addEventListener("click", () => {
+  clearTimeout(searchDebounceTimer);
+  isComposingHangul = false;
+  state.region = "ALL";
+  state.city = "ALL";
+  state.caterer = "ALL";
+  state.query = "";
+  state.sort = "region";
+  state.highlightedNum = null;
+  searchInputEl.value = "";
+  searchClearBtn.classList.remove("show");
+  document.querySelectorAll("#regionGrid .region-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.region === "ALL");
+  });
+  document.querySelectorAll(".sort-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.sort === "region");
+  });
+  renderList();
+  showToast("검색 및 권역 필터가 초기화되었습니다.");
+});
+
+const scrollTopBtn = document.getElementById("scrollTopBtn");
+window.addEventListener("scroll", () => {
+  scrollTopBtn.classList.toggle("show", window.scrollY > 360);
+}, { passive: true });
+scrollTopBtn.addEventListener("click", () => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
+document.getElementById("syncLiveBtn").addEventListener("click", () => {
+  fetchLiveGolfData(true);
+});
+
+renderList();
+fetchLiveGolfData(false);
+</script>
+</body>
+</html>
